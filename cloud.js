@@ -1,0 +1,159 @@
+(function(){
+  'use strict';
+  const cfg=window.COACH_PO_SUPABASE||{};
+  const configured=cfg.url && cfg.anonKey && !cfg.url.includes('DIN-PROSJEKT') && !cfg.anonKey.includes('DIN-');
+  let client=null, user=null, cloudReady=false, syncing=false, lastSnapshot=[];
+  const ORIGINAL_KEY='testresultater-v1';
+  const QUEUE_PREFIX='coach-po-sync-queue:';
+  const MIGRATION_PREFIX='coach-po-cloud-migrated:';
+  const rawPersist=()=>localStorage.setItem(ORIGINAL_KEY,JSON.stringify(data));
+  const clone=v=>JSON.parse(JSON.stringify(v));
+  const rowKey=r=>String(r.id);
+  function setMsg(text,kind=''){
+    const el=document.getElementById('authMsg'); if(el){el.className='authMsg '+kind; el.textContent=text;}
+  }
+  function setSync(text,kind=''){
+    const el=document.getElementById('syncStatus'); if(el){el.className='syncPill '+kind; el.textContent=text;}
+  }
+  function showLoggedIn(on){
+    document.getElementById('authShell').style.display=on?'none':'block';
+    document.getElementById('appMain').style.display=on?'block':'none';
+    document.getElementById('cloudBar').style.display=on?'flex':'none';
+    if(on) document.getElementById('cloudEmail').textContent=user?.email||'';
+  }
+  function queueKey(){return QUEUE_PREFIX+(user?.id||'anonymous')}
+  function getQueue(){try{return JSON.parse(localStorage.getItem(queueKey())||'[]')}catch{return []}}
+  function setQueue(q){localStorage.setItem(queueKey(),JSON.stringify(q))}
+  function toDb(r){return {
+    user_id:user.id, client_id:rowKey(r), athlete:r.athlete||'', birthdate:r.birthdate||null,
+    gender:r.gender||null, test_date:r.date||null, location:r.location||null, group_name:r.group||null,
+    longjump:validNum(r.longjump), liakov:validNum(r.liakov), ball:validNum(r.ball), sprint:validNum(r.sprint),
+    bosco:validNum(r.bosco), bosco_type:r.boscoType||null, comment:r.comment||null
+  }}
+  function validNum(v){return v==null||v===''?null:(Number.isFinite(Number(v))?Number(v):null)}
+  function fromDb(r){return {
+    id:r.client_id, athlete:r.athlete, birthdate:r.birthdate, gender:r.gender, date:r.test_date,
+    location:r.location, group:r.group_name, longjump:r.longjump==null?null:Number(r.longjump),
+    liakov:r.liakov==null?null:Number(r.liakov), ball:r.ball==null?null:Number(r.ball),
+    sprint:r.sprint==null?null:Number(r.sprint), bosco:r.bosco==null?null:Number(r.bosco),
+    boscoType:r.bosco_type||'CMJ', comment:r.comment||null
+  }}
+  function same(a,b){return JSON.stringify(a)===JSON.stringify(b)}
+  function enqueueDiff(prev,cur){
+    if(!user)return;
+    const p=new Map(prev.map(r=>[rowKey(r),r])), c=new Map(cur.map(r=>[rowKey(r),r]));
+    const up=[]; const del=[];
+    for(const [k,r] of c){if(!p.has(k)||!same(p.get(k),r))up.push(clone(r))}
+    for(const k of p.keys()){if(!c.has(k))del.push(k)}
+    if(up.length||del.length){const q=getQueue();q.push({upsert:up,delete:del,at:Date.now()});setQueue(q);flushQueue()}
+  }
+  // Replace the old local-only persistence with local cache + granular cloud queue.
+  window.persist=function(){
+    rawPersist();
+    if(cloudReady){const now=clone(data);enqueueDiff(lastSnapshot,now);lastSnapshot=now}
+  };
+  async function flushQueue(){
+    if(!client||!user||syncing||!navigator.onLine)return;
+    const q=getQueue();if(!q.length){setSync('Synkronisert','good');return}
+    syncing=true;setSync('Synkroniserer…');
+    try{
+      while(q.length){
+        const op=q[0];
+        if(op.upsert?.length){
+          const payload=op.upsert.map(toDb);
+          const {error}=await client.from('test_results').upsert(payload,{onConflict:'user_id,client_id'});
+          if(error)throw error;
+        }
+        if(op.delete?.length){
+          const {error}=await client.from('test_results').delete().eq('user_id',user.id).in('client_id',op.delete.map(String));
+          if(error)throw error;
+        }
+        q.shift();setQueue(q);
+      }
+      setSync('Synkronisert','good');
+    }catch(e){
+      console.error(e);setSync(navigator.onLine?'Synk-feil':'Offline – venter','warn');
+    }finally{syncing=false}
+  }
+  function dedupe(rows){
+    const map=new Map();
+    for(const r of rows){
+      const fp=[(r.athlete||'').trim().toLowerCase(),r.date||'',validNum(r.longjump),validNum(r.liakov),validNum(r.sprint),validNum(r.bosco)].join('|');
+      if(!map.has(fp))map.set(fp,r);
+    }
+    return [...map.values()];
+  }
+  async function fetchRemote(){
+    const {data:rows,error}=await client.from('test_results').select('*').eq('user_id',user.id).order('created_at',{ascending:true});
+    if(error)throw error;return (rows||[]).map(fromDb);
+  }
+  async function uploadRows(rows){
+    if(!rows.length)return;
+    const clean=dedupe(rows).map((r,i)=>{if(r.id==null||r.id==='')r.id='migrated-'+Date.now()+'-'+i;return r});
+    for(let i=0;i<clean.length;i+=200){
+      const {error}=await client.from('test_results').upsert(clean.slice(i,i+200).map(toDb),{onConflict:'user_id,client_id'});
+      if(error)throw error;
+    }
+  }
+  async function bootstrap(){
+    setSync('Laster data…'); cloudReady=false;
+    try{
+      await flushQueue();
+      let remote=await fetchRemote();
+      const migrated=localStorage.getItem(MIGRATION_PREFIX+user.id)==='1';
+      if(!remote.length && !migrated && Array.isArray(data) && data.length){
+        setSync('Flytter lokale data…');
+        await uploadRows(data);
+        localStorage.setItem(MIGRATION_PREFIX+user.id,'1');
+        remote=await fetchRemote();
+      }else if(!migrated){localStorage.setItem(MIGRATION_PREFIX+user.id,'1')}
+      data=remote;rawPersist();lastSnapshot=clone(data);cloudReady=true;render();setSync('Synkronisert','good');
+    }catch(e){
+      console.error(e);cloudReady=true;lastSnapshot=clone(data);render();setSync('Kun lokal cache','warn');
+    }
+  }
+  async function refresh(){
+    if(!client||!user)return;
+    setSync('Oppdaterer…');
+    try{
+      await flushQueue();
+      if(getQueue().length)return;
+      const remote=await fetchRemote();
+      data=remote;rawPersist();lastSnapshot=clone(data);render();setSync('Synkronisert','good');
+    }catch(e){console.error(e);setSync('Kunne ikke oppdatere','warn')}
+  }
+  async function signIn(){
+    if(!client)return setMsg('Supabase er ikke konfigurert ennå. Fyll inn config.js.','warn');
+    const email=document.getElementById('authEmail').value.trim(),password=document.getElementById('authPassword').value;
+    if(!email||!password)return setMsg('Skriv inn e-post og passord.','warn');
+    setMsg('Logger inn…');
+    const {error}=await client.auth.signInWithPassword({email,password});
+    if(error)setMsg(error.message,'warn');
+  }
+  async function signUp(){
+    if(!client)return setMsg('Supabase er ikke konfigurert ennå. Fyll inn config.js.','warn');
+    const email=document.getElementById('authEmail').value.trim(),password=document.getElementById('authPassword').value;
+    if(!email||password.length<6)return setMsg('Bruk gyldig e-post og et passord på minst 6 tegn.','warn');
+    setMsg('Oppretter konto…');
+    const {data:res,error}=await client.auth.signUp({email,password});
+    if(error)return setMsg(error.message,'warn');
+    if(!res.session)setMsg('Konto opprettet. Bekreft e-posten, og logg deretter inn.','good');
+  }
+  async function signOut(){if(client)await client.auth.signOut()}
+  window.cloudSignIn=signIn;window.cloudSignUp=signUp;window.cloudSignOut=signOut;window.cloudRefresh=refresh;
+  window.addEventListener('online',()=>{setSync('Online – synkroniserer…');flushQueue().then(refresh)});
+  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&user)refresh()});
+  if(!configured){
+    showLoggedIn(false);setMsg('Database er klar i appen, men Supabase må kobles til. Se OPPSETT_SUPABASE.md og fyll inn config.js.','warn');return;
+  }
+  if(!window.supabase?.createClient){showLoggedIn(false);setMsg('Kunne ikke laste Supabase-biblioteket. Kontroller internettilkoblingen.','warn');return}
+  client=window.supabase.createClient(cfg.url,cfg.anonKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+  client.auth.onAuthStateChange(async(event,session)=>{
+    user=session?.user||null;
+    if(user){showLoggedIn(true);await bootstrap()}
+    else{cloudReady=false;showLoggedIn(false);setMsg('Logg inn for å hente den felles databasen.');setSync('Ikke innlogget')}
+  });
+  client.auth.getSession().then(({data:res})=>{
+    if(!res.session){showLoggedIn(false);setMsg('Logg inn med samme konto på alle enhetene.');}
+  });
+})();
