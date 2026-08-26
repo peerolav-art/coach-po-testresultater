@@ -53,6 +53,13 @@ button{border:0;border-radius:10px;padding:11px 14px;font-weight:700;cursor:poin
 <div class="test"><b>20 m sprint <span class="unit">sekund</span></b><div class="field"><input id="sprint" type="number" min="0" step="0.01" placeholder="3,18"></div></div>
 <div class="test"><b>Bosco <span class="unit">cm</span></b><div class="field"><input id="bosco" type="number" min="0" step="0.1" placeholder="42,5"></div></div>
 </div>
+  <h2 style="margin-top:18px">Styrke</h2>
+<div class="tests">
+  <div class="test"><b>Knebøy <span class="unit">kg</span></b><div class="field"><input id="squat" type="number" min="0" step="0.1" placeholder="82,5"></div></div>
+  <div class="test"><b>Frivending <span class="unit">kg</span></b><div class="field"><input id="clean" type="number" min="0" step="0.1" placeholder="62,5"></div></div>
+  <div class="test"><b>Markløft <span class="unit">kg</span></b><div class="field"><input id="deadlift" type="number" min="0" step="0.1" placeholder="120,5"></div></div>
+  <div class="test"><b>Benkpress <span class="unit">kg</span></b><div class="field"><input id="bench" type="number" min="0" step="0.1" placeholder="72,5"></div></div>
+</div>
 <div class="row"><div class="field"><label>Liakov ballvekt (kg)</label><input id="ball" type="number" min="0" step="0.1" placeholder="3"></div><div class="field"><label>Bosco-type</label><select id="boscoType"><option>CMJ</option><option>SJ</option><option>15 sek</option><option>30 sek</option><option>Annet</option></select></div></div>
 <div class="field"><label>Kommentar</label><input id="comment" placeholder="F.eks. underlag, sko, dagsform"></div>
 <button class="primary wide" onclick="saveResult()">Lagre resultat</button><div class="note">Resultatet lagres i felles database og caches lokalt ved behov.</div>
@@ -62,7 +69,7 @@ button{border:0;border-radius:10px;padding:11px 14px;font-weight:700;cursor:poin
 <div class="actions"><button class="secondary" onclick="exportCSV()">Eksporter CSV</button><button class="secondary" onclick="loadDemo()">Legg inn eksempeldata</button><button class="danger" onclick="clearAll()">Slett alle</button></div>
 </section>
 <section class="card full profile" id="athleteProfile">
-t er l<div class="profileHead"><div><h2 id="profileTitle">Utøverprofil</h2><div class="profileHint">Utvikling over tid. For 20 m sprinavere tid bedre. Målinger uten dato vises i historikken, men brukes ikke som tidsakse.</div></div><<div style="display:flex;gap:8px;align-items:center">
+<div class="profileHead"><div><h2 id="profileTitle">Utøverprofil</h2><div class="profileHint">Utvikling over tid. For 20 m sprinavere tid bedre. Målinger uten dato vises i historikken, men brukes ikke som tidsakse.</div></div><<div style="display:flex;gap:8px;align-items:center">
   <button class="secondary" onclick="startNewTestFromProfile(document.getElementById('profileTitle').textContent.replace(' · utvikling',''))">Registrer ny test</button>
   <button class="ghost" onclick="closeProfile()">Lukk profil</button>
 </div></div><div class="profileMeta" id="profileMeta"></div>
@@ -100,10 +107,14 @@ async function saveResult(){
  if(val('environment')==='Ute' && val('temperature')==null){try{await fetchWeatherForTest()}catch(e){}}
  const r={id:uid(),athlete,birthdate:val('birthdate'),gender:val('gender'),date:val('date'),testTime:val('testTime'),location:val('location'),group:val('group'),
  environment:val('environment'),temperature:num('temperature'),weatherText:val('weatherText'),latitude:lastLat,longitude:lastLon,
- longjump:num('longjump'),liakov:num('liakov'),ball:num('ball'),sprint:num('sprint'),bosco:num('bosco'),boscoType:val('boscoType'),comment:val('comment')};
- if([r.longjump,r.liakov,r.sprint,r.bosco].every(x=>x===null)){alert('Registrer minst ett testresultat.');return}
- data.push(r);persist();['longjump','liakov','sprint','bosco','comment'].forEach(x=>document.getElementById(x).value='');render()
+ longjump:num('longjump'),liakov:num('liakov'),ball:num('ball'),sprint:num('sprint'),bosco:num('bosco'),
+
+squat:num('squat'),clean:num('clean'),deadlift:num('deadlift'),bench:num('bench'),
+boscoType:val('boscoType'),comment:val('comment')};
+if([r.longjump,r.liakov,r.sprint,r.bosco,r.squat,r.clean,r.deadlift,r.bench].every(x=>x===null)){alert('Registrer minst ett testresultat.');return}
+data.push(r);persist();['longjump','liakov','sprint','bosco','squat','clean','deadlift','bench','comment'].forEach(x=>document.getElementById(x).value='');render()
 }
+
 
 function calcAge(birthdate,onDate){if(!birthdate)return null;const b=new Date(birthdate+'T00:00:00'),d=new Date((onDate||new Date().toISOString().slice(0,10))+'T00:00:00');if(isNaN(b)||isNaN(d)||b>d)return null;let a=d.getFullYear()-b.getFullYear();const m=d.getMonth()-b.getMonth();if(m<0||(m===0&&d.getDate()<b.getDate()))a--;return a}
 function updateAge(){const a=calcAge(val('birthdate'),val('date'));const el=document.getElementById('age');if(el)el.value=a==null?'':a+' år'}
