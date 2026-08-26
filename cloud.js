@@ -25,15 +25,16 @@
   function getQueue(){try{return JSON.parse(localStorage.getItem(queueKey())||'[]')}catch{return []}}
   function setQueue(q){localStorage.setItem(queueKey(),JSON.stringify(q))}
   function toDb(r){return {
-    user_id:user.id, client_id:rowKey(r), athlete:r.athlete||'', birthdate:r.birthdate||null,
-    gender:r.gender||null, test_date:r.date||null, location:r.location||null, group_name:r.group||null,
+    id:Number.isFinite(Number(r.id))?Math.trunc(Number(r.id)):Date.now()*1000+Math.floor(Math.random()*1000),
+    user_id:user.id, athlete:r.athlete||'', birthdate:r.birthdate||null,
+    gender:r.gender||null, test_date:r.date||null, location:r.location||null, athlete_group:r.group||null,
     longjump:validNum(r.longjump), liakov:validNum(r.liakov), ball:validNum(r.ball), sprint:validNum(r.sprint),
     bosco:validNum(r.bosco), bosco_type:r.boscoType||null, comment:r.comment||null
   }}
   function validNum(v){return v==null||v===''?null:(Number.isFinite(Number(v))?Number(v):null)}
   function fromDb(r){return {
-    id:r.client_id, athlete:r.athlete, birthdate:r.birthdate, gender:r.gender, date:r.test_date,
-    location:r.location, group:r.group_name, longjump:r.longjump==null?null:Number(r.longjump),
+    id:r.id, athlete:r.athlete, birthdate:r.birthdate, gender:r.gender, date:r.test_date,
+    location:r.location, group:r.athlete_group, longjump:r.longjump==null?null:Number(r.longjump),
     liakov:r.liakov==null?null:Number(r.liakov), ball:r.ball==null?null:Number(r.ball),
     sprint:r.sprint==null?null:Number(r.sprint), bosco:r.bosco==null?null:Number(r.bosco),
     boscoType:r.bosco_type||'CMJ', comment:r.comment||null
@@ -61,11 +62,11 @@
         const op=q[0];
         if(op.upsert?.length){
           const payload=op.upsert.map(toDb);
-          const {error}=await client.from('test_results').upsert(payload,{onConflict:'user_id,client_id'});
+          const {error}=await client.from('test_results').upsert(payload,{onConflict:'id'});
           if(error)throw error;
         }
         if(op.delete?.length){
-          const {error}=await client.from('test_results').delete().eq('user_id',user.id).in('client_id',op.delete.map(String));
+          const {error}=await client.from('test_results').delete().eq('user_id',user.id).in('id',op.delete.map(x=>Math.trunc(Number(x))));
           if(error)throw error;
         }
         q.shift();setQueue(q);
@@ -91,7 +92,7 @@
     if(!rows.length)return;
     const clean=dedupe(rows).map((r,i)=>{if(r.id==null||r.id==='')r.id='migrated-'+Date.now()+'-'+i;return r});
     for(let i=0;i<clean.length;i+=200){
-      const {error}=await client.from('test_results').upsert(clean.slice(i,i+200).map(toDb),{onConflict:'user_id,client_id'});
+      const {error}=await client.from('test_results').upsert(clean.slice(i,i+200).map(toDb),{onConflict:'id'});
       if(error)throw error;
     }
   }

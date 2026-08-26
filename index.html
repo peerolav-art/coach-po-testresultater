@@ -89,7 +89,7 @@ const KEY='testresultater-v1';let data=JSON.parse(localStorage.getItem(KEY)||'[]
 document.getElementById('date').value=new Date().toISOString().slice(0,10);
 updateAge();
 setTimeout(detectLocation,300);
-function uid(){return Date.now()+Math.random()}
+function uid(){return Date.now()*1000+Math.floor(Math.random()*1000)}
 function makeId(){return Date.now()+Math.floor(Math.random()*1000000000)}
 function val(id){const v=document.getElementById(id).value.trim();return v===''?null:v}function num(id){const v=val(id);return v===null?null:Number(v)}
 function saveResult(){const athlete=val('athlete');if(!athlete){alert('Skriv inn navn på utøver.');return}const r={id:uid(),athlete,birthdate:val('birthdate'),gender:val('gender'),date:val('date'),location:val('location'),group:val('group'),longjump:num('longjump'),liakov:num('liakov'),ball:num('ball'),sprint:num('sprint'),bosco:num('bosco'),boscoType:val('boscoType'),comment:val('comment')};if([r.longjump,r.liakov,r.sprint,r.bosco].every(x=>x===null)){alert('Registrer minst ett testresultat.');return}data.push(r);persist();['longjump','liakov','sprint','bosco','comment'].forEach(x=>document.getElementById(x).value='');render()}

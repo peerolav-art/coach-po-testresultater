@@ -1,4 +1,4 @@
-const CACHE='coach-po-testresultater-v2.1.0-edit-stats';
+const CACHE='coach-po-v2-2-editfix';
 const CORE=[
   './','./index.html','./manifest.webmanifest','./config.js','./cloud.js',
   './icons/coach-po-32.png','./icons/coach-po-64.png','./icons/coach-po-180.png',
