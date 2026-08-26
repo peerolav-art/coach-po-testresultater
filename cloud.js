@@ -29,16 +29,18 @@
     user_id:user.id, athlete:r.athlete||'', birthdate:r.birthdate||null,
     gender:r.gender||null, test_date:r.date||null, test_time:r.testTime||null, location:r.location||null, athlete_group:r.group||null,
     test_environment:r.environment||null, temperature_c:validNum(r.temperature), weather_text:r.weatherText||null, latitude:validNum(r.latitude), longitude:validNum(r.longitude),
-    longjump:validNum(r.longjump), liakov:validNum(r.liakov), ball:validNum(r.ball), sprint:validNum(r.sprint),
-    bosco:validNum(r.bosco), bosco_type:r.boscoType||null, comment:r.comment||null
+   longjump:validNum(r.longjump), liakov:validNum(r.ljakov), ball:validNum(r.ball), sprint:validNum(r.sprint), squat:validNum(r.squat),
+clean:validNum(r.clean), deadlift:validNum(r.deadlift), bench:validNum(r.bench),
+bosco:validNum(r.bosco), bosco_type:r.boscoType||null, comment:r.comment||null
   }}
   function validNum(v){return v==null||v===''?null:(Number.isFinite(Number(v))?Number(v):null)}
   function fromDb(r){return {
     id:r.id, athlete:r.athlete, birthdate:r.birthdate, gender:r.gender, date:r.test_date, testTime:r.test_time,
-    location:r.location, group:r.athlete_group, environment:r.test_environment, temperature:r.temperature_c==null?null:Number(r.temperature_c), weatherText:r.weather_text||null, latitude:r.latitude==null?null:Number(r.latitude), longitude:r.longitude==null?null:Number(r.longitude), longjump:r.longjump==null?null:Number(r.longjump),
-    liakov:r.liakov==null?null:Number(r.liakov), ball:r.ball==null?null:Number(r.ball),
-    sprint:r.sprint==null?null:Number(r.sprint), bosco:r.bosco==null?null:Number(r.bosco),
-    boscoType:r.bosco_type||'CMJ', comment:r.comment||null
+   liakov:r.ljakov==null?null:Number(r.ljakov), ball:r.ball==null?null:Number(r.ball),
+sprint:r.sprint==null?null:Number(r.sprint), bosco:r.bosco==null?null:Number(r.bosco), squat:r.squat==null?null:Number(r.squat),
+clean:r.clean==null?null:Number(r.clean), deadlift:r.deadlift==null?null:Number(r.deadlift), bench:r.bench==null?null:Number(r.bench),
+boscoType:r.bosco_type||'CMJ', comment:r.comment||null
+  
   }}
   function same(a,b){return JSON.stringify(a)===JSON.stringify(b)}
   function enqueueDiff(prev,cur){
