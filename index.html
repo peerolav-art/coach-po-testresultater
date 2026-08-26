@@ -62,7 +62,10 @@ button{border:0;border-radius:10px;padding:11px 14px;font-weight:700;cursor:poin
 <div class="actions"><button class="secondary" onclick="exportCSV()">Eksporter CSV</button><button class="secondary" onclick="loadDemo()">Legg inn eksempeldata</button><button class="danger" onclick="clearAll()">Slett alle</button></div>
 </section>
 <section class="card full profile" id="athleteProfile">
-<div class="profileHead"><div><h2 id="profileTitle">Utøverprofil</h2><div class="profileHint">Utvikling over tid. For 20 m sprint er lavere tid bedre. Målinger uten dato vises i historikken, men brukes ikke som tidsakse.</div></div><button class="ghost" onclick="closeProfile()">Lukk profil</button></div><div class="profileMeta" id="profileMeta"></div>
+t er l<div class="profileHead"><div><h2 id="profileTitle">Utøverprofil</h2><div class="profileHint">Utvikling over tid. For 20 m sprinavere tid bedre. Målinger uten dato vises i historikken, men brukes ikke som tidsakse.</div></div><<div style="display:flex;gap:8px;align-items:center">
+  <button class="secondary" onclick="startNewTestFromProfile(document.getElementById('profileTitle').textContent.replace(' · utvikling',''))">Registrer ny test</button>
+  <button class="ghost" onclick="closeProfile()">Lukk profil</button>
+</div></div><div class="profileMeta" id="profileMeta"></div>
 <div class="profileSummary" id="profileSummary"></div>
 <div class="chartGrid" id="profileCharts"></div>
 <div class="scroll" id="profileHistory"></div>
@@ -159,7 +162,33 @@ function openProfile(name){
  document.getElementById('profileHistory').innerHTML=`${undated?`<div class="undatedNote">Historiske PB-er uten sikker testdato beholdes som referanse, men brukes ikke til å beregne utvikling over tid.</div>`:''}<h3>Historikk</h3><table><thead><tr><th>Dato</th><th>LUT</th><th>Liakov</th><th>20 m</th><th>Bosco</th><th>Sted / vær</th><th></th></tr></thead><tbody>${rows.slice().reverse().map(r=>`<tr><td>${esc(r.date||'–')}${r.testTime?'<br><small>'+esc(r.testTime)+'</small>':''}</td><td>${fmt(r.longjump)} m</td><td>${fmt(r.liakov)} m</td><td>${fmt(r.sprint)} s</td><td>${fmt(r.bosco,1)} cm</td><td>${esc(r.location||'–')}<br><small>${weatherCell(r)}</small></td><td><button class="secondary" onclick="openEdit('${escAttr(r.id)}')">Rediger</button></td></tr>`).join('')}</tbody></table>`;
  p.scrollIntoView({behavior:'smooth',block:'start'})
 }
-function loadDemo(){if(data.length&&!confirm('Legge eksempeldata i tillegg til eksisterende data?'))return;const now=Date.now();data.push({id:now+1,athlete:'Ada Hansen',birthdate:'2009-04-12',gender:'Kvinne',date:'2026-08-10',location:'Oslo',group:'U18',longjump:2.21,liakov:13.40,ball:3,sprint:3.34,bosco:39.2,boscoType:'CMJ',comment:''},{id:now+2,athlete:'Ada Hansen',birthdate:'2009-04-12',gender:'Kvinne',date:'2026-08-23',location:'Oslo',group:'U18',longjump:2.28,liakov:14.10,ball:3,sprint:3.27,bosco:41.0,boscoType:'CMJ',comment:''},{id:now+3,athlete:'Noah Berg',birthdate:'2008-11-03',gender:'Mann',date:'2026-08-23',location:'Oslo',group:'U18',longjump:2.55,liakov:16.30,ball:3,sprint:3.05,bosco:47.5,boscoType:'CMJ',comment:''});persist();render()}
+function startNewTestFromProfile(name){
+  const rows=profileRows(name);
+  const r=rows.slice().reverse().find(x=>x.birthdate||x.gender||x.group)||rows[rows.length-1]||{};
+
+  document.getElementById('athlete').value=name;
+  document.getElementById('birthdate').value=r.birthdate||'';
+  document.getElementById('gender').value=r.gender||'';
+  document.getElementById('group').value=r.group||'';
+
+  ['longjump','liakov','ball','sprint','bosco','comment'].forEach(id=>{
+    document.getElementById(id).value='';
+  });
+
+  document.getElementById('date').value=new Date().toISOString().slice(0,10);
+  document.getElementById('testTime').value=new Date().toTimeString().slice(0,5);
+
+  updateAge();
+  closeProfile();
+
+  document.getElementById('athlete').scrollIntoView({
+    behavior:'smooth',
+    block:'center'
+  });
+
+  document.getElementById('longjump').focus();
+}
+ function loadDemo(){if(data.length&&!confirm('Legge eksempeldata i tillegg til eksisterende data?'))return;const now=Date.now();data.push({id:now+1,athlete:'Ada Hansen',birthdate:'2009-04-12',gender:'Kvinne',date:'2026-08-10',location:'Oslo',group:'U18',longjump:2.21,liakov:13.40,ball:3,sprint:3.34,bosco:39.2,boscoType:'CMJ',comment:''},{id:now+2,athlete:'Ada Hansen',birthdate:'2009-04-12',gender:'Kvinne',date:'2026-08-23',location:'Oslo',group:'U18',longjump:2.28,liakov:14.10,ball:3,sprint:3.27,bosco:41.0,boscoType:'CMJ',comment:''},{id:now+3,athlete:'Noah Berg',birthdate:'2008-11-03',gender:'Mann',date:'2026-08-23',location:'Oslo',group:'U18',longjump:2.55,liakov:16.30,ball:3,sprint:3.05,bosco:47.5,boscoType:'CMJ',comment:''});persist();render()}
 function exportCSV(){const head=['Dato','Tid','Utøver','Fødselsdato','Alder ved test','Kjønn','Sted','Testforhold','Temperatur (°C)','Vær','Gruppe','Lengde uten tilløp (LUT) (m)','Liakov (m)','Ballvekt (kg)','20 m (s)','Bosco','Bosco-type','Kommentar'];const lines=[head,...data.map(r=>[r.date,r.testTime,r.athlete,r.birthdate,calcAge(r.birthdate,r.date),r.gender,r.location,r.environment,r.temperature,r.weatherText,r.group,r.longjump,r.liakov,r.ball,r.sprint,r.bosco,r.boscoType,r.comment])];const csv=lines.map(row=>row.map(v=>`"${String(v??'').replaceAll('"','""')}"`).join(';')).join('\n');const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='testresultater.csv';a.click();URL.revokeObjectURL(a.href)}
 
 function parseNumber(v){if(v==null)return null;const s=String(v).replace(/\s/g,'').replace(',','.').replace(/[^0-9.\-]/g,'');if(!s||s==='-'||!/^[-]?\d+(\.\d+)?$/.test(s))return null;const n=Number(s);return Number.isFinite(n)?n:null}
