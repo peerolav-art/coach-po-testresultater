@@ -141,6 +141,29 @@
     if(!res.session)setMsg('Konto opprettet. Bekreft e-posten, og logg deretter inn.','good');
   }
   async function signOut(){if(client)await client.auth.signOut()}
+  async function updateResult(row){
+    if(!client||!user)throw new Error('Ikke koblet til databasen.');
+    const id=Number(row.id);
+    if(!Number.isFinite(id))throw new Error('Resultatet mangler en gyldig database-ID.');
+    const payload={
+      athlete:row.athlete||'', birthdate:row.birthdate||null, gender:row.gender||null,
+      test_date:row.date||null, location:row.location||null, athlete_group:row.group||null,
+      longjump:validNum(row.longjump), liakov:validNum(row.liakov), ball:validNum(row.ball),
+      sprint:validNum(row.sprint), bosco:validNum(row.bosco), bosco_type:row.boscoType||null,
+      comment:row.comment||null, updated_at:new Date().toISOString()
+    };
+    setSync('Lagrer…');
+    const {data:updated,error}=await client.from('test_results')
+      .update(payload)
+      .eq('user_id',user.id)
+      .eq('id',Math.trunc(id))
+      .select('id');
+    if(error){setSync('Lagringsfeil','warn');throw error;}
+    if(!updated||updated.length!==1){setSync('Lagringsfeil','warn');throw new Error('Fant ikke resultatet som skulle oppdateres.');}
+    rawPersist();lastSnapshot=clone(data);setSync('Synkronisert','good');
+    return true;
+  }
+  window.cloudUpdateResult=updateResult;
   window.cloudSignIn=signIn;window.cloudSignUp=signUp;window.cloudSignOut=signOut;window.cloudRefresh=refresh;
   window.addEventListener('online',()=>{setSync('Online – synkroniserer…');flushQueue().then(refresh)});
   document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&user)refresh()});
