@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Testresultater</title>
+<title>Kapasitetsanalyse</title>
 <style>
 :root{--bg:#f4f7fb;--card:#fff;--text:#172033;--muted:#6b7484;--line:#dfe5ee;--accent:#2457e6;--good:#11875d;--warn:#9a6700}
 *{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--text)}
@@ -25,12 +25,12 @@ button{border:0;border-radius:10px;padding:11px 14px;font-weight:700;cursor:poin
 </style>
 
 
-<meta name="description" content="Coach PO Testresultater – registrering og oversikt for LUT, Liakov, 20 meter sprint og Bosco.">
+<meta name="description" content="Coach PO Kapasitetsanalyse – registrering og oversikt for LUT, Liakov, 20 meter sprint og Bosco.">
 <meta name="theme-color" content="#111827">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="Testresultater">
+<meta name="apple-mobile-web-app-title" content="Kapasitetsanalyse">
 <link rel="icon" type="image/png" sizes="32x32" href="icons/coach-po-32.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icons/coach-po-192.png">
 <link rel="apple-touch-icon" sizes="180x180" href="icons/coach-po-180.png">
@@ -38,7 +38,7 @@ button{border:0;border-radius:10px;padding:11px 14px;font-weight:700;cursor:poin
 
 </head>
 <body>
-<header><div class="wrap brandHeader"><img class="brandLogo" src="icons/coach-po-192.png" alt="Coach PO"><div><h1 class="title">Testresultater</h1><div class="sub">Lengde uten tilløp (LUT) · Liakov · 20 m sprint · Bosco</div></div><div class="cloudBar" id="cloudBar"><span class="syncPill" id="syncStatus">Kobler til…</span><span class="cloudEmail" id="cloudEmail"></span><button class="secondary" type="button" onclick="window.cloudRefresh&&window.cloudRefresh()">Oppdater</button><button class="ghost" type="button" onclick="window.cloudSignOut&&window.cloudSignOut()">Logg ut</button></div></div></header>
+<header><div class="wrap brandHeader"><img class="brandLogo" src="icons/coach-po-192.png" alt="Coach PO"><div><h1 class="title">Kapasitetsanalyse</h1><div class="sub">Lengde uten tilløp (LUT) · Liakov · 20 m sprint · Bosco</div></div><div class="cloudBar" id="cloudBar"><span class="syncPill" id="syncStatus">Kobler til…</span><span class="cloudEmail" id="cloudEmail"></span><button class="secondary" type="button" onclick="window.cloudRefresh&&window.cloudRefresh()">Oppdater</button><button class="ghost" type="button" onclick="window.cloudSignOut&&window.cloudSignOut()">Logg ut</button></div></div></header>
 <section class="authShell" id="authShell"><div class="authCard"><div class="authBrand"><img src="icons/coach-po-192.png" alt="Coach PO"><div><h2 style="margin:0">Logg inn</h2><div class="hint">Samme konto på Mac, iPhone og iPad gir de samme testresultatene.</div></div></div><div class="field"><label>E-post</label><input id="authEmail" type="email" autocomplete="email" placeholder="navn@eksempel.no"></div><div class="field"><label>Passord</label><input id="authPassword" type="password" autocomplete="current-password" minlength="6" placeholder="Minst 6 tegn"></div><div class="authActions"><button class="primary" type="button" onclick="window.cloudSignIn&&window.cloudSignIn()">Logg inn</button><button class="secondary" type="button" onclick="window.cloudSignUp&&window.cloudSignUp()">Opprett konto</button></div><div class="authMsg" id="authMsg">Koble appen til Supabase i <code>config.js</code> før publisering.</div></div></section>
 <main id="appMain" style="display:none"><div class="grid">
 <section class="card">
