@@ -27,14 +27,15 @@
   function toDb(r){return {
     id:Number.isFinite(Number(r.id))?Math.trunc(Number(r.id)):Date.now()*1000+Math.floor(Math.random()*1000),
     user_id:user.id, athlete:r.athlete||'', birthdate:r.birthdate||null,
-    gender:r.gender||null, test_date:r.date||null, location:r.location||null, athlete_group:r.group||null,
+    gender:r.gender||null, test_date:r.date||null, test_time:r.testTime||null, location:r.location||null, athlete_group:r.group||null,
+    test_environment:r.environment||null, temperature_c:validNum(r.temperature), weather_text:r.weatherText||null, latitude:validNum(r.latitude), longitude:validNum(r.longitude),
     longjump:validNum(r.longjump), liakov:validNum(r.liakov), ball:validNum(r.ball), sprint:validNum(r.sprint),
     bosco:validNum(r.bosco), bosco_type:r.boscoType||null, comment:r.comment||null
   }}
   function validNum(v){return v==null||v===''?null:(Number.isFinite(Number(v))?Number(v):null)}
   function fromDb(r){return {
-    id:r.id, athlete:r.athlete, birthdate:r.birthdate, gender:r.gender, date:r.test_date,
-    location:r.location, group:r.athlete_group, longjump:r.longjump==null?null:Number(r.longjump),
+    id:r.id, athlete:r.athlete, birthdate:r.birthdate, gender:r.gender, date:r.test_date, testTime:r.test_time,
+    location:r.location, group:r.athlete_group, environment:r.test_environment, temperature:r.temperature_c==null?null:Number(r.temperature_c), weatherText:r.weather_text||null, latitude:r.latitude==null?null:Number(r.latitude), longitude:r.longitude==null?null:Number(r.longitude), longjump:r.longjump==null?null:Number(r.longjump),
     liakov:r.liakov==null?null:Number(r.liakov), ball:r.ball==null?null:Number(r.ball),
     sprint:r.sprint==null?null:Number(r.sprint), bosco:r.bosco==null?null:Number(r.bosco),
     boscoType:r.bosco_type||'CMJ', comment:r.comment||null
@@ -147,7 +148,8 @@
     if(!Number.isFinite(id))throw new Error('Resultatet mangler en gyldig database-ID.');
     const payload={
       athlete:row.athlete||'', birthdate:row.birthdate||null, gender:row.gender||null,
-      test_date:row.date||null, location:row.location||null, athlete_group:row.group||null,
+      test_date:row.date||null, test_time:row.testTime||null, location:row.location||null, athlete_group:row.group||null,
+      test_environment:row.environment||null, temperature_c:validNum(row.temperature), weather_text:row.weatherText||null, latitude:validNum(row.latitude), longitude:validNum(row.longitude),
       longjump:validNum(row.longjump), liakov:validNum(row.liakov), ball:validNum(row.ball),
       sprint:validNum(row.sprint), bosco:validNum(row.bosco), bosco_type:row.boscoType||null,
       comment:row.comment||null, updated_at:new Date().toISOString()
