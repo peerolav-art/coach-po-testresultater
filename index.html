@@ -100,6 +100,8 @@ window.pdfjsLib=pdfjsLib;
 </script>
 <script>
 const KEY='testresultater-v1';let data=JSON.parse(localStorage.getItem(KEY)||'[]');let pdfRows=[];let pdfRawText='';let lastLat=null,lastLon=null;
+  window.getCoachData=()=>data;
+window.setCoachData=(rows)=>{data=rows;};
 document.getElementById('date').value=new Date().toISOString().slice(0,10);
 document.getElementById('testTime').value=new Date().toTimeString().slice(0,5);
 updateAge();
