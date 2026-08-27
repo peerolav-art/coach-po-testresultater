@@ -211,6 +211,10 @@ async function updatePassword(){
       test_environment:row.environment||null, temperature_c:validNum(row.temperature), weather_text:row.weatherText||null, latitude:validNum(row.latitude), longitude:validNum(row.longitude),
       longjump:validNum(row.longjump), liakov:validNum(row.liakov), ball:validNum(row.ball),
       sprint:validNum(row.sprint), bosco:validNum(row.bosco), bosco_type:row.boscoType||null,
+      squat:validNum(row.squat),
+clean:validNum(row.clean),
+deadlift:validNum(row.deadlift),
+bench:validNum(row.bench),
       comment:row.comment||null, updated_at:new Date().toISOString()
     };
     setSync('Lagrer…');
