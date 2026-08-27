@@ -39,7 +39,7 @@ button{border:0;border-radius:10px;padding:11px 14px;font-weight:700;cursor:poin
 </head>
 <body>
 <header><div class="wrap brandHeader"><img class="brandLogo" src="icons/coach-po-192.png" alt="Coach PO"><div><h1 class="title">Kapasitetsanalyse</h1><div class="sub">Lengde uten tilløp (LUT) · Liakov · 20 m sprint · Bosco</div></div><div class="cloudBar" id="cloudBar"><span class="syncPill" id="syncStatus">Kobler til…</span><span class="cloudEmail" id="cloudEmail"></span><button class="secondary" type="button" onclick="window.cloudRefresh&&window.cloudRefresh()">Oppdater</button><button class="ghost" type="button" onclick="window.cloudSignOut&&window.cloudSignOut()">Logg ut</button></div></div></header>
-<section class="authShell" id="authShell"><div class="authCard"><div class="authBrand"><img src="icons/coach-po-192.png" alt="Coach PO"><div><h2 style="margin:0">Logg inn</h2><div class="hint">Samme konto på Mac, iPhone og iPad gir de samme testresultatene.</div></div></div><div class="field"><label>E-post</label><input id="authEmail" type="email" autocomplete="email" placeholder="navn@eksempel.no"></div><div class="field"><label>Passord</label><input id="authPassword" type="password" autocomplete="current-password" minlength="6" placeholder="Minst 6 tegn"></div><div class="authActions"><button class="primary" type="button" onclick="window.cloudSignIn&&window.cloudSignIn()">Logg inn</button><button class="secondary" type="button" onclick="window.cloudSignUp&&window.cloudSignUp()">Opprett konto</button></div><div class="authMsg" id="authMsg">Koble appen til Supabase i <code>config.js</code> før publisering.</div></div></section>
+<section class="authShell" id="authShell"><div class="authCard"><div class="authBrand"><img src="icons/coach-po-192.png" alt="Coach PO"><div><h2 style="margin:0">Logg inn</h2><div class="hint">Samme konto på Mac, iPhone og iPad gir de samme testresultatene.</div></div></div><div class="field"><label>E-post</label><input id="authEmail" type="email" autocomplete="email" placeholder="navn@eksempel.no"></div><div class="field"><label>Passord</label><input id="authPassword" type="password" autocomplete="current-password" minlength="6" placeholder="Minst 6 tegn"></div><div class="authActions"><button class="primary" type="button" onclick="window.cloudSignIn&&window.cloudSignIn()">Logg inn</button><button class="secondary" type="button" onclick="window.cloudRequestPasswordReset&&window.cloudRequestPasswordReset()">Glemt passord?</button><button class="secondary" type="button" onclick="window.cloudSignUp&&window.cloudSignUp()">Opprett konto</button></div><div class="authMsg" id="authMsg">Koble appen til Supabase i <code>config.js</code> før publisering.</div></div></section>
 <main id="appMain" style="display:none"><div class="grid">
 <section class="card">
 <h2>Registrer test</h2>
@@ -247,4 +247,20 @@ if ('serviceWorker' in navigator) {
 <script src="config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="cloud.js"></script>
+  <div id="passwordResetModal" class="modal">
+  <div class="modalCard">
+    <h2>Velg nytt passord</h2>
+    <p>Skriv inn det nye passordet ditt.</p>
+
+    <label>Nytt passord</label>
+    <input id="newPassword" type="password" autocomplete="new-password">
+
+    <label style="margin-top:12px">Gjenta nytt passord</label>
+    <input id="newPasswordRepeat" type="password" autocomplete="new-password">
+
+    <button class="primary" type="button" onclick="window.cloudUpdatePassword&&window.cloudUpdatePassword()">Lagre nytt passord</button>
+
+    <div id="passwordResetMsg" class="authMsg"></div>
+  </div>
+</div>
 </body></html>
