@@ -70,7 +70,7 @@ boscoType:r.bosco_type||'CMJ', comment:r.comment||null
     unique.set(String(dbRow.id),dbRow);
   }
   const payload=[...unique.values()];
-          console.log('SUPABASE PAYLOAD IDS:',payload.map(r=>r.id),payload);
+          
   const {error}=await client.from('test_results').upsert(payload,{onConflict:'id'});
   if(error)throw error;
 }
