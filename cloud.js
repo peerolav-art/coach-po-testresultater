@@ -64,10 +64,15 @@ boscoType:r.bosco_type||'CMJ', comment:r.comment||null
       while(q.length){
         const op=q[0];
         if(op.upsert?.length){
-          const payload=op.upsert.map(toDb);
-          const {error}=await client.from('test_results').upsert(payload,{onConflict:'id'});
-          if(error)throw error;
-        }
+  const unique=new Map();
+  for(const r of op.upsert){
+    unique.set(String(r.id),r);
+  }
+  const payload=[...unique.values()].map(toDb);
+  const {error}=await client.from('test_results').upsert(payload,{onConflict:'id'});
+  if(error)throw error;
+}
+        
        if(op.delete?.length){
   const ids=op.delete.map(x=>Number(x)).filter(Number.isFinite).map(Math.trunc);
   if(ids.length){
