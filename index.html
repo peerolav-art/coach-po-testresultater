@@ -463,7 +463,7 @@ function datedMetricRows(rows,key){return rows.filter(r=>r.date&&r[key]!=null&&N
 function changeText(rows,key,lower=false,d=2,unit=''){const vals=datedMetricRows(rows,key);if(vals.length<2)return 'Trenger minst 2 daterte målinger';const first=Number(vals[0][key]),last=Number(vals[vals.length-1][key]),diff=last-first;const improved=lower?diff<0:diff>0;return `${improved?'▲':'▼'} ${diff>0?'+':''}${fmt(diff,d)}${unit} fra første til siste`}
 function latestMetric(rows,key){const vals=datedMetricRows(rows,key);return vals.length?vals[vals.length-1]:null}
 function drawChart(canvas,rows,key,lower=false,dec=2){const vals=datedMetricRows(rows,key);const ctx=canvas.getContext('2d'),w=canvas.clientWidth||300,h=170,dpr=window.devicePixelRatio||1;canvas.width=w*dpr;canvas.height=h*dpr;ctx.scale(dpr,dpr);ctx.clearRect(0,0,w,h);ctx.font='11px system-ui';ctx.fillStyle='#6b7484';if(!vals.length){ctx.fillText('Ingen daterte målinger',10,25);return}const ys=vals.map(r=>Number(r[key])),min=Math.min(...ys),max=Math.max(...ys),pad=(max-min||1)*.15;const lo=min-pad,hi=max+pad,L=42,R=12,T=14,B=30;ctx.strokeStyle='#dfe5ee';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(L,T);ctx.lineTo(L,h-B);ctx.lineTo(w-R,h-B);ctx.stroke();ctx.fillText(fmt(max,dec),4,T+4);ctx.fillText(fmt(min,dec),4,h-B);if(vals.length===1){const x=(L+w-R)/2,y=(T+h-B)/2;ctx.fillStyle='#2457e6';ctx.beginPath();ctx.arc(x,y,4,0,Math.PI*2);ctx.fill()}else{ctx.strokeStyle='#2457e6';ctx.lineWidth=2;ctx.beginPath();vals.forEach((r,i)=>{const x=L+i*(w-L-R)/(vals.length-1),y=T+(hi-Number(r[key]))*(h-T-B)/(hi-lo);i?ctx.lineTo(x,y):ctx.moveTo(x,y)});ctx.stroke();ctx.fillStyle='#2457e6';vals.forEach((r,i)=>{const x=L+i*(w-L-R)/(vals.length-1),y=T+(hi-Number(r[key]))*(h-T-B)/(hi-lo);ctx.beginPath();ctx.arc(x,y,3,0,Math.PI*2);ctx.fill()})}ctx.fillStyle='#6b7484';const first=vals[0].date,last=vals[vals.length-1].date;ctx.fillText(first,L,h-8);const tw=ctx.measureText(last).width;ctx.fillText(last,Math.max(L,w-R-tw),h-8)}
-function openProfile(name){
+async function openProfile(name){
  const rows=profileRows(name),p=document.getElementById('athleteProfile');p.classList.add('open');document.getElementById('profileTitle').textContent=name+' · utvikling';
  const dated=rows.filter(r=>r.date),undated=rows.length-dated.length;
  const firstDate=dated[0]?.date||null,lastDate=dated[dated.length-1]?.date||null;
@@ -474,7 +474,46 @@ function openProfile(name){
  defs.forEach((d,i)=>drawChart(document.getElementById('profileChart'+i),rows,d[1],d[4],d[3]));
  const weatherCell=r=>r.environment==='Ute'?(r.temperature!=null?`${fmt(Number(r.temperature),1)} °C${r.weatherText?' · '+esc(r.weatherText):''}`:(r.weatherText?esc(r.weatherText):'Ute')):(r.environment==='Inne'?'Inne':'–');
  document.getElementById('profileHistory').innerHTML=`${undated?`<div class="undatedNote">Historiske PB-er uten sikker testdato beholdes som referanse, men brukes ikke til å beregne utvikling over tid.</div>`:''}<h3>Historikk</h3><table><thead><tr><th>Dato</th><th>LUT</th><th>Liakov</th><th>20 m</th><th>Bosco</th><th>Sted / vær</th><th></th></tr></thead><tbody>${rows.slice().reverse().map(r=>`<tr><td>${esc(r.date||'–')}${r.testTime?'<br><small>'+esc(r.testTime)+'</small>':''}</td><td>${fmt(r.longjump)} m</td><td>${fmt(r.liakov)} m</td><td>${fmt(r.sprint)} s</td><td>${fmt(r.bosco,1)} cm</td><td>${esc(r.location||'–')}<br><small>${weatherCell(r)}</small></td><td><button class="secondary" onclick="openEdit('${escAttr(r.id)}')">Rediger</button></td></tr>`).join('')}</tbody></table>`;
- p.scrollIntoView({behavior:'smooth',block:'start'})
+ try{
+  if(typeof window.cloudFetchCompetitionResults==='function'){
+    const competitionRows=await window.cloudFetchCompetitionResults(name);
+
+    if(competitionRows.length){
+      const competitionHtml=competitionRows.map(r=>{
+        const date=r.competition_date
+          ? r.competition_date.split('-').reverse().join('.')
+          : '–';
+
+        const result=
+          r.result_m===null || r.result_m===undefined
+            ? '–'
+            : Number(r.result_m).toFixed(2).replace('.',',');
+
+        const weight=
+          r.implement_weight===null || r.implement_weight===undefined
+            ? ''
+            : ` · ${Number(r.implement_weight).toString().replace('.',',')} ${r.implement_unit||'kg'}`;
+
+        const location=r.location ? ` · ${r.location}` : '';
+        const weather=r.weather_text ? ` · ${r.weather_text}` : '';
+        const comment=r.comment ? `<div class="sub">${r.comment}</div>` : '';
+
+        return `
+          <div class="test" style="margin-top:8px">
+            <b>${date} · ${r.event_type||'Konkurranse'}</b>
+            <div>${result} m${weight}${location}${weather}</div>
+            ${comment}
+          </div>
+        `;
+      }).join('');
+
+      document.getElementById('profileHistory').innerHTML +=
+        `<h3 style="margin-top:20px">Konkurranseresultater</h3>${competitionHtml}`;
+    }
+  }
+}catch(error){
+  console.error('Kunne ikke hente konkurranseresultater til utøverprofilen:',error);
+}p.scrollIntoView({behavior:'smooth',block:'start'})
 }
 function startNewTestFromProfile(name){
   const rows=profileRows(name);
