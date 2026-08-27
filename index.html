@@ -68,6 +68,81 @@ button{border:0;border-radius:10px;padding:11px 14px;font-weight:700;cursor:poin
 <div class="topbar"><h2>Resultater</h2><input id="search" placeholder="Søk utøver..." oninput="render()"></div><div id="importReceipt" class="importReceipt"></div><div class="stats" id="stats"></div><div class="scroll"><div id="results"></div></div>
 <div class="actions"><button class="secondary" onclick="exportCSV()">Eksporter CSV</button><button class="secondary" onclick="loadDemo()">Legg inn eksempeldata</button><button class="danger" onclick="clearAll()">Slett alle</button></div>
 </section>
+  <section class="card">
+  <div class="topbar">
+    <h2>Konkurranseresultater</h2>
+  </div>
+
+  <p class="hint">
+    Registrer kastresultater fra konkurranser. Dato, sted og vær hentes fra opplysningene du registrerer her.
+  </p>
+
+  <div class="row">
+    <div class="field">
+      <label>Utøver</label>
+      <input id="compAthlete" type="text" placeholder="Navn på utøver">
+    </div>
+
+    <div class="field">
+      <label>Dato</label>
+      <input id="compDate" type="date">
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="field">
+      <label>Sted</label>
+      <input id="compLocation" type="text" placeholder="F.eks. Skien">
+    </div>
+
+    <div class="field">
+      <label>Vær</label>
+      <input id="compWeather" type="text" placeholder="F.eks. sol, 18 °C">
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="field">
+      <label>Kastredskap</label>
+      <select id="compEvent">
+        <option value="">Velg kastredskap</option>
+        <option value="Slegge">Slegge</option>
+        <option value="Kule">Kule</option>
+        <option value="Diskos">Diskos</option>
+        <option value="Spyd">Spyd</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label>Redskapsvekt (kg)</label>
+      <input id="compWeight" type="number" min="0" step="0.001" placeholder="F.eks. 7.260">
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="field">
+      <label>Resultat (meter)</label>
+      <input id="compDistance" type="number" min="0" step="0.01" placeholder="F.eks. 62.48">
+    </div>
+
+    <div class="field">
+      <label>Kommentar</label>
+      <input id="compComment" type="text" placeholder="Valgfritt">
+    </div>
+  </div>
+
+  <button class="primary wide" type="button" onclick="saveCompetitionResult()">
+    Lagre konkurranseresultat
+  </button>
+
+  <div id="competitionStatus" class="note"></div>
+
+  <div class="topbar" style="margin-top:20px">
+    <h3>Historikk</h3>
+  </div>
+
+  <div id="competitionHistory" class="scroll"></div>
+</section>
 <section class="card full profile" id="athleteProfile">
 <div class="profileHead"><div><h2 id="profileTitle">Utøverprofil</h2><div class="profileHint">Utvikling over tid. For 20 m sprinavere tid bedre. Målinger uten dato vises i historikken, men brukes ikke som tidsakse.</div></div><<div style="display:flex;gap:8px;align-items:center">
   <button class="secondary" onclick="startNewTestFromProfile(document.getElementById('profileTitle').textContent.replace(' · utvikling',''))">Registrer ny test</button>
