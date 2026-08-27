@@ -6,7 +6,7 @@
   const ORIGINAL_KEY='testresultater-v1';
   const QUEUE_PREFIX='coach-po-sync-queue:';
   const MIGRATION_PREFIX='coach-po-cloud-migrated:';
-  const rawPersist=()=>localStorage.setItem(ORIGINAL_KEY,JSON.stringify(window.getCoachData()));
+  const rawPersist=()=>localStorage.setItem(ORIGINAL_KEY,JSON.stringify(data));
   const clone=v=>JSON.parse(JSON.stringify(v));
   const rowKey=r=>String(r.id);
   function setMsg(text,kind=''){
@@ -118,15 +118,15 @@ boscoType:r.bosco_type||'CMJ', comment:r.comment||null
       await flushQueue();
       let remote=await fetchRemote();
       const migrated=localStorage.getItem(MIGRATION_PREFIX+user.id)==='1';
-      if(!remote.length && !migrated && Array.isArray(window.getCoachData()) && window.getCoachData().length){
+      if(!remote.length && !migrated && Array.isArray(data) && data.length){
         setSync('Flytter lokale data…');
-        await uploadRows(window.getCoachData());
+        await uploadRows(data);
         localStorage.setItem(MIGRATION_PREFIX+user.id,'1');
         remote=await fetchRemote();
       }else if(!migrated){localStorage.setItem(MIGRATION_PREFIX+user.id,'1')}
-      window.setCoachData(remote);rawPersist();lastSnapshot=clone(window.getCoachData());cloudReady=true;render();setSync('Synkronisert','good');
+      data=remote;rawPersist();lastSnapshot=clone(data);cloudReady=true;render();setSync('Synkronisert','good');
     }catch(e){
-     console.error(e);cloudReady=true;lastSnapshot=clone(window.getCoachData());render();setSync('Kun lokal cache','warn');
+     console.error(e);cloudReady=true;lastSnapshot=clone(data);render();setSync('Kun lokal cache','warn');
     }
   }
   async function refresh(){
@@ -136,7 +136,7 @@ boscoType:r.bosco_type||'CMJ', comment:r.comment||null
       await flushQueue();
       if(getQueue().length)return;
       const remote=await fetchRemote();
-      window.setCoachData(remote);rawPersist();lastSnapshot=clone(window.getCoachData());render();setSync('Synkronisert','good');
+      data=remote;rawPersist();lastSnapshot=clone(data);render();setSync('Synkronisert','good');
     }catch(e){console.error(e);setSync('Kunne ikke oppdatere','warn')}
   }
   async function signIn(){
