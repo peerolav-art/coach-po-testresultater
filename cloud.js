@@ -66,9 +66,10 @@ boscoType:r.bosco_type||'CMJ', comment:r.comment||null
         if(op.upsert?.length){
   const unique=new Map();
   for(const r of op.upsert){
-    unique.set(String(r.id),r);
+    const dbRow=toDb(r);
+    unique.set(String(dbRow.id),dbRow);
   }
-  const payload=[...unique.values()].map(toDb);
+  const payload=[...unique.values()];
   const {error}=await client.from('test_results').upsert(payload,{onConflict:'id'});
   if(error)throw error;
 }
