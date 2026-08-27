@@ -69,7 +69,7 @@ boscoType:r.bosco_type||'CMJ', comment:r.comment||null
           if(error)throw error;
         }
         if(op.delete?.length){
-          const {error}=await client.from('test_results').delete().eq('user_id',user.id).in('id',op.delete.map(x=>Math.trunc(Number(x))));
+         }catch(e){console.error('SUPABASE SYNK-FEIL:',e);setSync('Synk-feil','err')}
           if(error)throw error;
         }
         q.shift();setQueue(q);
