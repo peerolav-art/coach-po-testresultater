@@ -143,6 +143,50 @@ boscoType:r.bosco_type||'CMJ', comment:r.comment||null
     if(error)return setMsg(error.message,'warn');
     if(!res.session)setMsg('Konto opprettet. Bekreft e-posten, og logg deretter inn.','good');
   }
+async function requestPasswordReset(){
+  if(!client)return setMsg('Supabase er ikke konfigurert ennå.','warn');
+  const email=document.getElementById('authEmail').value.trim();
+  if(!email)return setMsg('Skriv inn e-postadressen din først.','warn');
+  setMsg('Sender lenke for nytt passord…');
+  const redirectTo=window.location.origin+window.location.pathname;
+  const {error}=await client.auth.resetPasswordForEmail(email,{redirectTo});
+  if(error)return setMsg(error.message,'warn');
+  setMsg('E-post sendt. Åpne lenken i e-posten for å velge nytt passord.','good');
+}
+function showPasswordReset(){
+  const modal=document.getElementById('passwordResetModal');
+  if(modal)modal.classList.add('open');
+}
+
+async function updatePassword(){
+  if(!client)return;
+
+  const p1=document.getElementById('newPassword')?.value||'';
+  const p2=document.getElementById('newPasswordRepeat')?.value||'';
+  const msg=document.getElementById('passwordResetMsg');
+
+  const say=(text,kind='')=>{
+    if(msg){
+      msg.className='authMsg '+kind;
+      msg.textContent=text;
+    }
+  };
+
+  if(p1.length<6)return say('Passordet må være minst 6 tegn.','warn');
+  if(p1!==p2)return say('Passordene er ikke like.','warn');
+
+  say('Lagrer nytt passord…');
+
+  const {error}=await client.auth.updateUser({password:p1});
+
+  if(error)return say(error.message,'warn');
+
+  say('Passordet er oppdatert. Du er nå logget inn.','good');
+
+  setTimeout(()=>{
+    document.getElementById('passwordResetModal')?.classList.remove('open');
+  },900);
+}
   async function signOut(){if(client)await client.auth.signOut()}
   async function updateResult(row){
     if(!client||!user)throw new Error('Ikke koblet til databasen.');
@@ -168,7 +212,7 @@ boscoType:r.bosco_type||'CMJ', comment:r.comment||null
     return true;
   }
   window.cloudUpdateResult=updateResult;
-  window.cloudSignIn=signIn;window.cloudSignUp=signUp;window.cloudSignOut=signOut;window.cloudRefresh=refresh;
+  window.cloudSignIn=signIn;window.cloudSignUp=signUp;window.cloudSignOut=signOut;window.cloudRefresh=refresh;window.cloudRequestPasswordReset=requestPasswordReset;window.cloudUpdatePassword=updatePassword;
   window.addEventListener('online',()=>{setSync('Online – synkroniserer…');flushQueue().then(refresh)});
   document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&user)refresh()});
   if(!configured){
@@ -177,10 +221,24 @@ boscoType:r.bosco_type||'CMJ', comment:r.comment||null
   if(!window.supabase?.createClient){showLoggedIn(false);setMsg('Kunne ikke laste Supabase-biblioteket. Kontroller internettilkoblingen.','warn');return}
   client=window.supabase.createClient(cfg.url,cfg.anonKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
   client.auth.onAuthStateChange(async(event,session)=>{
-    user=session?.user||null;
-    if(user){showLoggedIn(true);await bootstrap()}
-    else{cloudReady=false;showLoggedIn(false);setMsg('Logg inn for å hente den felles databasen.');setSync('Ikke innlogget')}
-  });
+  user=session?.user||null;
+
+  if(event==='PASSWORD_RECOVERY'){
+    showLoggedIn(false);
+    showPasswordReset();
+    return;
+  }
+
+  if(user){
+    showLoggedIn(true);
+    await bootstrap();
+  }else{
+    cloudReady=false;
+    showLoggedIn(false);
+    setMsg('Logg inn for å hente den felles databasen.');
+    setSync('Ikke innlogget');
+  }
+});
   client.auth.getSession().then(({data:res})=>{
     if(!res.session){showLoggedIn(false);setMsg('Logg inn med samme konto på alle enhetene.');}
   });
