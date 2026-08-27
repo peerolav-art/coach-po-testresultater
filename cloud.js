@@ -280,11 +280,34 @@ bench:validNum(row.bench),
 
   return inserted;
 }
-  
+ async function fetchCompetitionResults(athlete){
+  if(!client || !user){
+    throw new Error('Ikke koblet til databasen.');
+  }
+
+  let query=client
+    .from('competition_results')
+    .select('*')
+    .eq('user_id',user.id)
+    .order('competition_date',{ascending:false})
+    .order('created_at',{ascending:false});
+
+  if(athlete){
+    query=query.eq('athlete',athlete);
+  }
+
+  const {data:rows,error}=await query;
+
+  if(error) throw error;
+
+  return rows||[];
+} 
   
   window.cloudUpdateResult=updateResult;
   window.cloudAddCompetitionResult=addCompetitionResult;
-  window.cloudSignIn=signIn;window.cloudSignUp=signUp;window.cloudSignOut=signOut;window.cloudRefresh=refresh;window.cloudRequestPasswordReset=requestPasswordReset;window.cloudUpdatePassword=updatePassword;
+  
+window.cloudFetchCompetitionResults=fetchCompetitionResults;
+window.cloudSignIn=signIn;window.cloudSignUp=signUp;window.cloudSignOut=signOut;window.cloudRefresh=refresh;window.cloudRequestPasswordReset=requestPasswordReset;
   window.addEventListener('online',()=>{setSync('Online – synkroniserer…');flushQueue().then(refresh)});
   document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&user)refresh()});
   if(!configured){
