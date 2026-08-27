@@ -187,7 +187,86 @@ function openEdit(id){
 }
 function closeEdit(){document.getElementById('editModal').classList.remove('open')}
 function editNum(id){const v=document.getElementById(id).value.trim();return v===''?null:Number(v)}
-async function saveEdit(){const id=document.getElementById('editId').value,r=findById(id);if(!r){alert('Kunne ikke finne resultatet som skal redigeres.');return}const athlete=document.getElementById('editAthlete').value.trim();if(!athlete){alert('Utøvernavn kan ikke være tomt.');return}const previous=JSON.parse(JSON.stringify(r));Object.assign(r,{athlete,birthdate:document.getElementById('editBirthdate').value||null,gender:document.getElementById('editGender').value||null,date:document.getElementById('editDate').value||null,testTime:document.getElementById('editTestTime').value||null,location:document.getElementById('editLocation').value.trim()||null,environment:document.getElementById('editEnvironment').value||null,temperature:editNum('editTemperature'),weatherText:document.getElementById('editWeatherText').value.trim()||null,group:document.getElementById('editGroup').value.trim()||null,longjump:editNum('editLongjump'),liakov:editNum('editLiakov'),ball:editNum('editBall'),sprint:editNum('editSprint'),bosco:editNum('editBosco'),squat:editNum('editSquat'),clean:editNum('editClean'),deadlift:editNum('editDeadlift'),bench:editNum('editBench'),boscoType:document.getElementById('editBoscoType').value||'CMJ',comment:document.getElementById('editComment').value.trim()||null});[r.longjump,r.liakov,r.sprint,r.bosco,r.squat,r.clean,r.deadlift,r.bench]){Object.assign(r,previous);alert('Resultatet må inneholde minst én testverdi.');return}const btn=document.getElementById('saveEditBtn');if(btn){btn.disabled=true;btn.textContent='Lagrer…'}try{if(typeof window.cloudUpdateResult==='function')await window.cloudUpdateResult(r);else persist();closeEdit();render();const p=document.getElementById('athleteProfile');if(p.classList.contains('open'))openProfile(r.athlete)}catch(e){Object.assign(r,previous);console.error('Kunne ikke lagre endring:',e);alert('Kunne ikke lagre endringen i databasen: '+(e?.message||e))}finally{if(btn){btn.disabled=false;btn.textContent='Lagre endringer'}}}
+async function saveEdit(){
+  const id=document.getElementById('editId').value;
+  const r=findById(id);
+
+  if(!r){
+    alert('Kunne ikke finne resultatet som skal redigeres.');
+    return;
+  }
+
+  const athlete=document.getElementById('editAthlete').value.trim();
+  if(!athlete){
+    alert('Utøvernavn kan ikke være tomt.');
+    return;
+  }
+
+  const previous=JSON.parse(JSON.stringify(r));
+
+  Object.assign(r,{
+    athlete,
+    birthdate:document.getElementById('editBirthdate').value||null,
+    gender:document.getElementById('editGender').value||null,
+    date:document.getElementById('editDate').value||null,
+    testTime:document.getElementById('editTestTime').value||null,
+    location:document.getElementById('editLocation').value.trim()||null,
+    environment:document.getElementById('editEnvironment').value||null,
+    temperature:editNum('editTemperature'),
+    weatherText:document.getElementById('editWeatherText').value.trim()||null,
+    group:document.getElementById('editGroup').value.trim()||null,
+    longjump:editNum('editLongjump'),
+    liakov:editNum('editLiakov'),
+    ball:editNum('editBall'),
+    sprint:editNum('editSprint'),
+    bosco:editNum('editBosco'),
+    squat:editNum('editSquat'),
+    clean:editNum('editClean'),
+    deadlift:editNum('editDeadlift'),
+    bench:editNum('editBench'),
+    boscoType:document.getElementById('editBoscoType').value||'CMJ',
+    comment:document.getElementById('editComment').value.trim()||null
+  });
+
+  if([r.longjump,r.liakov,r.sprint,r.bosco,r.squat,r.clean,r.deadlift,r.bench]
+      .every(v=>v===null)){
+    Object.assign(r,previous);
+    alert('Resultatet må inneholde minst én testverdi.');
+    return;
+  }
+
+  const btn=document.getElementById('saveEditBtn');
+
+  if(btn){
+    btn.disabled=true;
+    btn.textContent='Lagrer…';
+  }
+
+  try{
+    if(typeof window.cloudUpdateResult==='function'){
+      await window.cloudUpdateResult(r);
+    }else{
+      persist();
+    }
+
+    closeEdit();
+    render();
+
+    const p=document.getElementById('athleteProfile');
+    if(p.classList.contains('open')){
+      openProfile(r.athlete);
+    }
+  }catch(e){
+    Object.assign(r,previous);
+    console.error('Kunne ikke lagre endring:',e);
+    alert('Kunne ikke lagre endringen i databasen: '+(e?.message||e));
+  }finally{
+    if(btn){
+      btn.disabled=false;
+      btn.textContent='Lagre endringer';
+    }
+  }
+}
 function openProfileById(id){const r=findById(id);if(r)openProfile(r.athlete)}
 function closeProfile(){document.getElementById('athleteProfile').classList.remove('open')}
 function profileRows(name){return data.filter(r=>(r.athlete||'').trim().toLowerCase()===name.trim().toLowerCase()).sort((a,b)=>{if(a.date&&b.date)return a.date.localeCompare(b.date);if(a.date)return-1;if(b.date)return 1;return 0})}
