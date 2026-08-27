@@ -195,6 +195,65 @@ squat:num('squat'),clean:num('clean'),deadlift:num('deadlift'),bench:num('bench'
 boscoType:val('boscoType'),comment:val('comment')};
 if([r.longjump,r.liakov,r.sprint,r.bosco,r.squat,r.clean,r.deadlift,r.bench].every(x=>x===null)){alert('Registrer minst ett testresultat.');return}
 data.push(r);persist();['longjump','liakov','sprint','bosco','squat','clean','deadlift','bench','comment'].forEach(x=>document.getElementById(x).value='');render()
+}async function saveCompetitionResult(){
+  const athlete = document.getElementById('compAthlete').value.trim();
+  const date = document.getElementById('compDate').value;
+  const location = document.getElementById('compLocation').value.trim();
+  const eventType = document.getElementById('compEvent').value;
+  const resultM = Number(document.getElementById('compDistance').value);
+  const implementWeight = document.getElementById('compWeight').value === ''
+    ? null
+    : Number(document.getElementById('compWeight').value);
+  const implementUnit = 'kg';
+  const weatherText = document.getElementById('compWeather').value.trim();
+  const comment = document.getElementById('compComment').value.trim();
+
+  if(!athlete){
+    alert('Skriv inn navn på utøver.');
+    return;
+  }
+
+  if(!date){
+    alert('Velg dato.');
+    return;
+  }
+
+  if(!eventType){
+    alert('Velg kastøvelse.');
+    return;
+  }
+
+  if(!Number.isFinite(resultM) || resultM <= 0){
+    alert('Skriv inn et gyldig resultat i meter.');
+    return;
+  }
+
+  try{
+    if(typeof window.cloudAddCompetitionResult !== 'function'){
+      throw new Error('Konkurranselagring er ikke tilgjengelig.');
+    }
+
+    await window.cloudAddCompetitionResult({
+      athlete,
+      date,
+      location: location || null,
+      eventType,
+      resultM: Math.round(resultM * 100) / 100,
+      implementWeight,
+      implementUnit,
+      weatherText: weatherText || null,
+      comment: comment || null
+    });
+
+    alert('Konkurranseresultatet er lagret.');
+
+   document.getElementById('compDistance').value = '';
+    document.getElementById('compComment').value = '';
+
+  }catch(error){
+    console.error(error);
+    alert('Kunne ikke lagre konkurranseresultatet: ' + error.message);
+  }
 }
 
 
