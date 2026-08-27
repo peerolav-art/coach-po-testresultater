@@ -80,7 +80,7 @@ button{border:0;border-radius:10px;padding:11px 14px;font-weight:700;cursor:poin
   <div class="row">
     <div class="field">
       <label>Utøver</label>
-      <input id="compAthlete" type="text" placeholder="Navn på utøver">
+      <input id="compAthlete" type="text" placeholder="Navn på utøver" oninput="loadCompetitionHistory()">
     </div>
 
     <div class="field">
@@ -277,7 +277,9 @@ async function loadCompetitionHistory(){
     }
 
     box.innerHTML=rows.map(r=>{
-      const date=r.competition_date||'–';
+      const date=r.competition_date
+  ? r.competition_date.split('-').reverse().join('.')
+  : '–';
       const athlete=r.athlete||'–';
       const eventType=r.event_type||'–';
 
