@@ -156,10 +156,35 @@ function recordHolder(key,lower=false){const valid=data.filter(r=>r[key]!=null&&
 function render(){const rows=filtered(),box=document.getElementById('results');const recs=[['Lengde uten tilløp (LUT)','longjump',' m',2,false],['Liakov','liakov',' m',2,false],['20 m','sprint',' s',2,true],['Bosco','bosco',' cm',1,false]];const q=document.getElementById('search').value.trim().toLowerCase();const exactNames=[...new Set(rows.map(r=>r.athlete))];const personalMode=q!==''&&exactNames.length===1;document.getElementById('stats').innerHTML=recs.map(x=>{if(personalMode){const value=best(rows,x[1],x[4]);const holder=rows.filter(r=>r[x[1]]!=null&&Number(r[x[1]])>0&&Number(r[x[1]])===value).sort((a,b)=>(b.date||'').localeCompare(a.date||''))[0];return `<div class="stat"><small>Personlig beste · ${x[0]}</small><strong>${value==null?'–':fmt(value,x[3])+x[2]}</strong>${holder?`<span class="holder">${esc(exactNames[0])}</span><span class="recorddate">${esc(holder.date||'Dato ikke registrert')}</span>`:''}</div>`}const r=recordHolder(x[1],x[4]);return `<div class="stat"><small>Rekord gjennom tidene · ${x[0]}</small><strong>${!r?'–':fmt(r[x[1]],x[3])+x[2]}</strong>${r?`<span class="holder">${esc(r.athlete)}</span><span class="recorddate">${esc(r.date||'Dato ikke registrert')}</span>`:''}</div>`}).join('');if(!rows.length){box.innerHTML='<div class="empty">Ingen resultater registrert ennå.</div>';return}const b={longjump:best(data,'longjump'),liakov:best(data,'liakov'),sprint:best(data,'sprint',true),bosco:best(data,'bosco')};box.innerHTML=`<table><thead><tr><th>Dato</th><th>Utøver</th><th>LUT</th><th>Liakov</th><th>20 m</th><th>Bosco</th><th></th></tr></thead><tbody>`+rows.map(r=>`<tr><td>${esc(r.date||'–')}</td><td><button class="athleteLink" onclick="openProfileById('${escAttr(r.id)}')">${esc(r.athlete)}</button>${(r.birthdate||r.gender||r.group||r.location)?'<br><small>'+[r.birthdate?('Født '+esc(r.birthdate)+(calcAge(r.birthdate,r.date)!=null?' · '+calcAge(r.birthdate,r.date)+' år':'')):null,r.gender?esc(r.gender):null,r.group?esc(r.group):null,r.location?esc(r.location):null,r.environment?esc(r.environment):null,r.temperature!=null?(fmt(Number(r.temperature),1)+' °C'):null,r.weatherText?esc(r.weatherText):null].filter(Boolean).join(' · ')+'</small>':''}</td><td class="${r.longjump!=null&&r.longjump===b.longjump?'best':''}">${fmt(r.longjump)} m</td><td class="${r.liakov!=null&&r.liakov===b.liakov?'best':''}">${fmt(r.liakov)} m${r.ball?' <small>('+fmt(r.ball,1)+' kg)</small>':''}</td><td class="${r.sprint!=null&&r.sprint===b.sprint?'best':''}">${fmt(r.sprint)} s</td><td class="${r.bosco!=null&&r.bosco===b.bosco?'best':''}">${fmt(r.bosco,1)} cm <small>${esc(r.boscoType||'')}</small></td><td><div class="rowActions"><button class="secondary" onclick="openEdit('${escAttr(r.id)}')">Rediger</button><button class="danger" onclick="delById('${escAttr(r.id)}')">Slett</button></div></td></tr>`).join('')+'</tbody></table>'}
 function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}function escAttr(s){return esc(String(s)).replace(/`/g,'&#096;')}function findById(id){return data.find(r=>String(r.id)===String(id))}function delById(id){const r=findById(id);if(!r)return;if(confirm(`Slette resultatet for ${r.athlete}${r.date?' fra '+r.date:''}?`)){data=data.filter(x=>String(x.id)!==String(id));persist();render();const p=document.getElementById('athleteProfile');if(p.classList.contains('open'))openProfile(r.athlete)}}function clearAll(){if(confirm('Slette alle registrerte resultater?')){data=[];persist();render()}}
 function setEditValue(id,v){const e=document.getElementById(id);if(e)e.value=v??''}
-function openEdit(id){const r=findById(id);if(!r)return;setEditValue('editId',r.id);setEditValue('editAthlete',r.athlete);setEditValue('editBirthdate',r.birthdate);setEditValue('editGender',r.gender);setEditValue('editDate',r.date);setEditValue('editTestTime',r.testTime);setEditValue('editLocation',r.location);setEditValue('editEnvironment',r.environment);setEditValue('editTemperature',r.temperature);setEditValue('editWeatherText',r.weatherText);setEditValue('editGroup',r.group);setEditValue('editLongjump',r.longjump);setEditValue('editLiakov',r.liakov);setEditValue('editBall',r.ball);setEditValue('editSprint',r.sprint);setEditValue('editBosco',r.bosco)setEditValue('editSquat',r.squat);
-setEditValue('editClean',r.clean);
-setEditValue('editDeadlift',r.deadlift);
-setEditValue('editBench',r.bench);;setEditValue('editBoscoType',r.boscoType||'CMJ');setEditValue('editComment',r.comment);document.getElementById('editModal').classList.add('open')}
+function openEdit(id){
+  const r=findById(id);
+  if(!r)return;
+
+  setEditValue('editId',r.id);
+  setEditValue('editAthlete',r.athlete);
+  setEditValue('editBirthdate',r.birthdate);
+  setEditValue('editGender',r.gender);
+  setEditValue('editDate',r.date);
+  setEditValue('editTestTime',r.testTime);
+  setEditValue('editLocation',r.location);
+  setEditValue('editEnvironment',r.environment);
+  setEditValue('editTemperature',r.temperature);
+  setEditValue('editWeatherText',r.weatherText);
+  setEditValue('editGroup',r.group);
+  setEditValue('editLongjump',r.longjump);
+  setEditValue('editLiakov',r.liakov);
+  setEditValue('editBall',r.ball);
+  setEditValue('editSprint',r.sprint);
+  setEditValue('editBosco',r.bosco);
+  setEditValue('editSquat',r.squat);
+  setEditValue('editClean',r.clean);
+  setEditValue('editDeadlift',r.deadlift);
+  setEditValue('editBench',r.bench);
+  setEditValue('editBoscoType',r.boscoType||'CMJ');
+  setEditValue('editComment',r.comment);
+
+  document.getElementById('editModal').classList.add('open');
+}
 function closeEdit(){document.getElementById('editModal').classList.remove('open')}
 function editNum(id){const v=document.getElementById(id).value.trim();return v===''?null:Number(v)}
 async function saveEdit(){const id=document.getElementById('editId').value,r=findById(id);if(!r){alert('Kunne ikke finne resultatet som skal redigeres.');return}const athlete=document.getElementById('editAthlete').value.trim();if(!athlete){alert('Utøvernavn kan ikke være tomt.');return}const previous=JSON.parse(JSON.stringify(r));Object.assign(r,{athlete,birthdate:document.getElementById('editBirthdate').value||null,gender:document.getElementById('editGender').value||null,date:document.getElementById('editDate').value||null,testTime:document.getElementById('editTestTime').value||null,location:document.getElementById('editLocation').value.trim()||null,environment:document.getElementById('editEnvironment').value||null,temperature:editNum('editTemperature'),weatherText:document.getElementById('editWeatherText').value.trim()||null,group:document.getElementById('editGroup').value.trim()||null,longjump:editNum('editLongjump'),liakov:editNum('editLiakov'),ball:editNum('editBall'),sprint:editNum('editSprint'),bosco:editNum('editBosco'),squat:editNum('editSquat'),clean:editNum('editClean'),deadlift:editNum('editDeadlift'),bench:editNum('editBench'),boscoType:document.getElementById('editBoscoType').value||'CMJ',comment:document.getElementById('editComment').value.trim()||null});[r.longjump,r.liakov,r.sprint,r.bosco,r.squat,r.clean,r.deadlift,r.bench]){Object.assign(r,previous);alert('Resultatet må inneholde minst én testverdi.');return}const btn=document.getElementById('saveEditBtn');if(btn){btn.disabled=true;btn.textContent='Lagrer…'}try{if(typeof window.cloudUpdateResult==='function')await window.cloudUpdateResult(r);else persist();closeEdit();render();const p=document.getElementById('athleteProfile');if(p.classList.contains('open'))openProfile(r.athlete)}catch(e){Object.assign(r,previous);console.error('Kunne ikke lagre endring:',e);alert('Kunne ikke lagre endringen i databasen: '+(e?.message||e))}finally{if(btn){btn.disabled=false;btn.textContent='Lagre endringer'}}}
