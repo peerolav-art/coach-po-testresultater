@@ -181,6 +181,7 @@ document.getElementById('date').value=new Date().toISOString().slice(0,10);
 document.getElementById('testTime').value=new Date().toTimeString().slice(0,5);
 updateAge();
 setTimeout(detectLocation,300);
+  setTimeout(loadCompetitionHistory,1000);
 function uid(){return Date.now()*1000+Math.floor(Math.random()*1000)}
 function makeId(){return Date.now()+Math.floor(Math.random()*1000000000)}
 function val(id){const v=document.getElementById(id).value.trim();return v===''?null:v}function num(id){const v=val(id);return v===null?null:Number(v)}
@@ -249,13 +250,65 @@ data.push(r);persist();['longjump','liakov','sprint','bosco','squat','clean','de
 
    document.getElementById('compDistance').value = '';
     document.getElementById('compComment').value = '';
-
+await loadCompetitionHistory();
   }catch(error){
     console.error(error);
     alert('Kunne ikke lagre konkurranseresultatet: ' + error.message);
   }
 }
+async function loadCompetitionHistory(){
+  const box=document.getElementById('competitionHistory');
+  if(!box) return;
 
+  if(typeof window.cloudFetchCompetitionResults!=='function'){
+    box.innerHTML='<div class="note">Historikk er ikke tilgjengelig ennå.</div>';
+    return;
+  }
+
+  box.innerHTML='<div class="note">Henter historikk...</div>';
+
+  try{
+    const athlete=document.getElementById('compAthlete')?.value.trim()||'';
+    const rows=await window.cloudFetchCompetitionResults(athlete||null);
+
+    if(!rows.length){
+      box.innerHTML='<div class="note">Ingen konkurranseresultater registrert.</div>';
+      return;
+    }
+
+    box.innerHTML=rows.map(r=>{
+      const date=r.competition_date||'–';
+      const athlete=r.athlete||'–';
+      const eventType=r.event_type||'–';
+
+      const result=
+        r.result_m===null || r.result_m===undefined
+          ? '–'
+          : Number(r.result_m).toFixed(2).replace('.',',');
+
+      const weight=
+        r.implement_weight===null || r.implement_weight===undefined
+          ? ''
+          : ` · ${Number(r.implement_weight).toString().replace('.',',')} ${r.implement_unit||'kg'}`;
+
+      const location=r.location ? ` · ${r.location}` : '';
+      const weather=r.weather_text ? ` · ${r.weather_text}` : '';
+      const comment=r.comment ? `<div class="sub">${r.comment}</div>` : '';
+
+      return `
+        <div class="test" style="margin-bottom:8px">
+          <b>${date} · ${athlete}</b>
+          <div>${eventType}${weight} · ${result} m${location}${weather}</div>
+          ${comment}
+        </div>
+      `;
+    }).join('');
+
+  }catch(error){
+    console.error(error);
+    box.innerHTML='<div class="note warn">Kunne ikke hente konkurransehistorikk.</div>';
+  }
+}
 
 function calcAge(birthdate,onDate){if(!birthdate)return null;const b=new Date(birthdate+'T00:00:00'),d=new Date((onDate||new Date().toISOString().slice(0,10))+'T00:00:00');if(isNaN(b)||isNaN(d)||b>d)return null;let a=d.getFullYear()-b.getFullYear();const m=d.getMonth()-b.getMonth();if(m<0||(m===0&&d.getDate()<b.getDate()))a--;return a}
 function updateAge(){const a=calcAge(val('birthdate'),val('date'));const el=document.getElementById('age');if(el)el.value=a==null?'':a+' år'}
