@@ -228,7 +228,62 @@ bench:validNum(row.bench),
     rawPersist();lastSnapshot=clone(data);setSync('Synkronisert','good');
     return true;
   }
+  async function addCompetitionResult(row){
+  if(!client || !user){
+    throw new Error('Ikke koblet til databasen.');
+  }
+
+  const athlete=String(row.athlete||'').trim();
+  const eventType=String(row.eventType||'').trim();
+  const resultM=Number(row.resultM);
+
+  if(!athlete){
+    throw new Error('Utøver mangler.');
+  }
+
+  if(!['Slegge','Kule','Diskos','Spyd'].includes(eventType)){
+    throw new Error('Ugyldig kastøvelse.');
+  }
+
+  if(!Number.isFinite(resultM) || resultM<0){
+    throw new Error('Resultatet må være et gyldig antall meter.');
+  }
+
+  const weight=
+    row.implementWeight===null ||
+    row.implementWeight==='' ||
+    row.implementWeight===undefined
+      ? null
+      : Number(row.implementWeight);
+
+  const payload={
+    user_id:user.id,
+    athlete,
+    competition_date:row.date||null,
+    location:row.location||null,
+    weather_text:row.weatherText||null,
+    event_type:eventType,
+    result_m:resultM,
+    implement_weight:Number.isFinite(weight)?weight:null,
+    implement_unit:row.implementUnit==='g'?'g':'kg',
+    comment:row.comment||null,
+    updated_at:new Date().toISOString()
+  };
+
+  const {data:inserted,error}=await client
+    .from('competition_results')
+    .insert(payload)
+    .select('*')
+    .single();
+
+  if(error) throw error;
+
+  return inserted;
+}
+  
+  
   window.cloudUpdateResult=updateResult;
+  window.cloudAddCompetitionResult=addCompetitionResult;
   window.cloudSignIn=signIn;window.cloudSignUp=signUp;window.cloudSignOut=signOut;window.cloudRefresh=refresh;window.cloudRequestPasswordReset=requestPasswordReset;window.cloudUpdatePassword=updatePassword;
   window.addEventListener('online',()=>{setSync('Online – synkroniserer…');flushQueue().then(refresh)});
   document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&user)refresh()});
