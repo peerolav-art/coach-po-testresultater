@@ -68,10 +68,16 @@ boscoType:r.bosco_type||'CMJ', comment:r.comment||null
           const {error}=await client.from('test_results').upsert(payload,{onConflict:'id'});
           if(error)throw error;
         }
-        if(op.delete?.length){
-         }catch(e){console.error('SUPABASE SYNK-FEIL:',e);setSync('Synk-feil','err')}
-          if(error)throw error;
-        }
+       if(op.delete?.length){
+  const ids=op.delete.map(x=>Number(x)).filter(Number.isFinite).map(Math.trunc);
+  if(ids.length){
+    const {error}=await client.from('test_results')
+      .delete()
+      .eq('user_id',user.id)
+      .in('id',ids);
+    if(error)throw error;
+  }
+}
         q.shift();setQueue(q);
       }
       setSync('Synkronisert','good');
