@@ -349,12 +349,41 @@ bench:validNum(row.bench),
 
   return true;
 }
+  async function updateCompetitionResult(id,changes){
+  if(!client || !user){
+    throw new Error('Ikke koblet til databasen.');
+  }
+
+  const resultId=Number(id);
+
+  if(!Number.isFinite(resultId)){
+    throw new Error('Ugyldig resultat-ID.');
+  }
+
+  const payload={
+    ...changes,
+    updated_at:new Date().toISOString()
+  };
+
+  const {data:updated,error}=await client
+    .from('competition_results')
+    .update(payload)
+    .eq('user_id',user.id)
+    .eq('id',Math.trunc(resultId))
+    .select('*')
+    .single();
+
+  if(error) throw error;
+
+  return updated;
+}
   
   window.cloudUpdateResult=updateResult;
   window.cloudAddCompetitionResult=addCompetitionResult;
   
 window.cloudFetchCompetitionResults=fetchCompetitionResults;
   window.cloudDeleteCompetitionResult=deleteCompetitionResult;
+  window.cloudUpdateCompetitionResult=updateCompetitionResult;
 window.cloudSignIn=signIn;window.cloudSignUp=signUp;window.cloudSignOut=signOut;window.cloudRefresh=refresh;window.cloudRequestPasswordReset=requestPasswordReset;
   window.addEventListener('online',()=>{setSync('Online – synkroniserer…');flushQueue().then(refresh)});
   document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&user)refresh()});
