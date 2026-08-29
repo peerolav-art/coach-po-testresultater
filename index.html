@@ -619,7 +619,8 @@ document.getElementById('profileTitle').textContent=name+' · utvikling';
   console.error('Kunne ikke hente konkurranseresultater til utøverprofilen:',error);
 }p.scrollIntoView({behavior:'smooth',block:'start'})
 }
-  async function editCompetitionResult(id){
+  
+async function editCompetitionResult(id){
   try{
     if(typeof window.cloudFetchCompetitionResults !== 'function'){
       throw new Error('Kunne ikke hente konkurranseresultatet.');
@@ -632,17 +633,71 @@ document.getElementById('profileTitle').textContent=name+' · utvikling';
       throw new Error('Fant ikke konkurranseresultatet.');
     }
 
+    const newDate = prompt(
+      'Dato (ÅÅÅÅ-MM-DD):',
+      row.competition_date ?? ''
+    );
+    if(newDate === null) return;
+
     const newResult = prompt(
       'Resultat (meter):',
       String(row.result_m ?? '').replace('.', ',')
     );
-
     if(newResult === null) return;
 
-    const resultM = Number(newResult.replace(',', '.'));
+    const newWeight = prompt(
+      'Redskapsvekt (kg):',
+      row.implement_weight == null
+        ? ''
+        : String(row.implement_weight).replace('.', ',')
+    );
+    if(newWeight === null) return;
+
+    const newLocation = prompt(
+      'Sted:',
+      row.location ?? ''
+    );
+    if(newLocation === null) return;
+
+    const newWeather = prompt(
+      'Vær:',
+      row.weather_text ?? ''
+    );
+    if(newWeather === null) return;
+
+    const newComment = prompt(
+      'Kommentar:',
+      row.comment ?? ''
+    );
+    if(newComment === null) return;
+
+    const resultM = Number(
+      String(newResult).replace(',', '.')
+    );
 
     if(!Number.isFinite(resultM)){
       alert('Skriv inn et gyldig resultat.');
+      return;
+    }
+
+    let implementWeight = null;
+
+    if(String(newWeight).trim() !== ''){
+      implementWeight = Number(
+        String(newWeight).replace(',', '.')
+      );
+
+      if(!Number.isFinite(implementWeight)){
+        alert('Skriv inn en gyldig redskapsvekt.');
+        return;
+      }
+    }
+
+    if(
+      newDate &&
+      !/^\d{4}-\d{2}-\d{2}$/.test(newDate)
+    ){
+      alert('Dato må skrives som ÅÅÅÅ-MM-DD.');
       return;
     }
 
@@ -651,29 +706,40 @@ document.getElementById('profileTitle').textContent=name+' · utvikling';
     }
 
     await window.cloudUpdateCompetitionResult(id,{
-      result_m: resultM
+      competition_date: newDate || null,
+      result_m: resultM,
+      implement_weight: implementWeight,
+      location: newLocation.trim() || null,
+      weather_text: newWeather.trim() || null,
+      comment: newComment.trim() || null
     });
 
     await loadCompetitionHistory();
 
-    const profile=document.getElementById('athleteProfile');
-    const profileTitle=document.getElementById('profileTitle');
+    const profile = document.getElementById('athleteProfile');
+    const profileTitle = document.getElementById('profileTitle');
 
     if(
       profile &&
       profile.classList.contains('open') &&
       profileTitle
     ){
-      const athlete=profileTitle.textContent.split(' · ')[0].trim();
-      if(athlete) await openProfile(athlete);
+      const athlete =
+        profileTitle.textContent.split(' · ')[0].trim();
+
+      if(athlete){
+        await openProfile(athlete);
+      }
     }
 
   }catch(error){
     console.error(error);
-    alert('Kunne ikke redigere konkurranseresultatet: ' + error.message);
+    alert(
+      'Kunne ikke redigere konkurranseresultatet: ' +
+      error.message
+    );
   }
 }
-
 window.editCompetitionResult = editCompetitionResult;
   async function deleteCompetitionResult(id){
   if(!confirm('Vil du slette dette konkurranseresultatet?')) return;
