@@ -488,12 +488,21 @@ document.getElementById('profileTitle').textContent=name+' · utvikling';
 }else{const dated=rows.filter(r=>r.date),undated=rows.length-dated.length;
  const firstDate=dated[0]?.date||null,lastDate=dated[dated.length-1]?.date||null;
  document.getElementById('profileMeta').innerHTML=`${rows.length} registrering${rows.length===1?'':'er'}${firstDate?` · fra ${esc(firstDate)}${lastDate&&lastDate!==firstDate?' til '+esc(lastDate):''}`:''}${undated?` · ${undated} historisk PB uten dato`:''}`;
- const defs=[['LUT','longjump',' m',2,false],['Liakov','liakov',' m',2,false],['20 m','sprint',' s',2,true],['Bosco','bosco',' cm',1,false]];
+ const defs=[
+  ['LUT','longjump','m',2,false],
+  ['Liakov','liakov','m',2,false],
+  ['20 m','sprint','s',2,true],
+  ['Bosco','bosco','cm',1,false],
+  ['Knebøy','squat','kg',1,false],
+  ['Frivending','clean','kg',1,false],
+  ['Markløft','deadlift','kg',1,false],
+  ['Benkpress','bench','kg',1,false]
+];
  document.getElementById('profileSummary').innerHTML=defs.map(d=>{const pb=best(rows,d[1],d[4]),latest=latestMetric(rows,d[1]);return `<div class="stat"><small>Personlig beste · ${d[0]}</small><strong>${pb==null?'–':fmt(pb,d[3])+d[2]}</strong><span class="holder">${latest?'Siste: '+fmt(Number(latest[d[1]]),d[3])+d[2]+' · '+esc(latest.date):'Ingen datert måling'}</span><span class="recorddate">${changeText(rows,d[1],d[4],d[3],d[2])}</span></div>`}).join('');
  document.getElementById('profileCharts').innerHTML=defs.map((d,i)=>`<div class="chartCard"><h3>${d[0]} (${d[2].trim()})</h3><canvas id="profileChart${i}"></canvas></div>`).join('');
  defs.forEach((d,i)=>drawChart(document.getElementById('profileChart'+i),rows,d[1],d[4],d[3]));
  const weatherCell=r=>r.environment==='Ute'?(r.temperature!=null?`${fmt(Number(r.temperature),1)} °C${r.weatherText?' · '+esc(r.weatherText):''}`:(r.weatherText?esc(r.weatherText):'Ute')):(r.environment==='Inne'?'Inne':'–');
- document.getElementById('profileHistory').innerHTML=`${undated?`<div class="undatedNote">Historiske PB-er uten sikker testdato beholdes som referanse, men brukes ikke til å beregne utvikling over tid.</div>`:''}<h3>Historikk</h3><table><thead><tr><th>Dato</th><th>LUT</th><th>Liakov</th><th>20 m</th><th>Bosco</th><th>Sted / vær</th><th></th></tr></thead><tbody>${rows.slice().reverse().map(r=>`<tr><td>${esc(r.date||'–')}${r.testTime?'<br><small>'+esc(r.testTime)+'</small>':''}</td><td>${fmt(r.longjump)} m</td><td>${fmt(r.liakov)} m</td><td>${fmt(r.sprint)} s</td><td>${fmt(r.bosco,1)} cm</td><td>${esc(r.location||'–')}<br><small>${weatherCell(r)}</small></td><td><button class="secondary" onclick="openEdit('${escAttr(r.id)}')">Rediger</button></td></tr>`).join('')}</tbody></table>`;
+document.getElementById('profileHistory').innerHTML=`${undated?`<div class="undatedNote">Historiske PB-er uten sikker testdato beholdes som referanse, men brukes ikke til å beregne utvikling over tid.</div>`:''}<h3>Historikk</h3><table><thead><tr><th>Dato</th><th>LUT</th><th>Liakov</th><th>20 m</th><th>Bosco</th><th>Knebøy</th><th>Frivending</th><th>Markløft</th><th>Benkpress</th><th>Sted / vær</th><th></th></tr></thead><tbody>${rows.slice().reverse().map(r=>`<tr><td>${esc(r.date||'–')}${r.testTime?`<br><small>${esc(r.testTime)}</small>`:''}</td><td>${fmt(r.longjump)} m</td><td>${fmt(r.liakov)} m</td><td>${fmt(r.sprint)} s</td><td>${fmt(r.bosco,1)} cm</td><td>${fmt(r.squat,1)} kg</td><td>${fmt(r.clean,1)} kg</td><td>${fmt(r.deadlift,1)} kg</td><td>${fmt(r.bench,1)} kg</td><td>${weatherCell(r)}</td><td><button class="secondary" onclick="openEdit('${escAttr(r.id)}')">Rediger</button></td></tr>`).join('')}</tbody></table>`;
  }
       try{
   if(typeof window.cloudFetchCompetitionResults==='function'){
