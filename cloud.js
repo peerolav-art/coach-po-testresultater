@@ -118,14 +118,15 @@ boscoType:r.bosco_type||'CMJ', comment:r.comment||null
       await flushQueue();
       let remote=await fetchRemote();
       const migrated=localStorage.getItem(MIGRATION_PREFIX+user.id)==='1';
-      if(!remote.length && !migrated && Array.isArray(data) && data.length){
-        setSync('Flytter lokale data…');
+      const localData=window.getCoachData();
+if(!remote.length && !migrated && Array.isArray(localData) && localData.length){
+       await uploadRows(localData);
         await uploadRows(data);
         localStorage.setItem(MIGRATION_PREFIX+user.id,'1');
         remote=await fetchRemote();
-      }else if(!migrated){localStorage.setItem(MIGRATION_PREFIX+user.id,'1')}
+     window.setCoachData(remote);rawPersist();lastSnapshot=clone(remote);cloudReady=true;render();setSync('Synkronisert','good');
       data=remote;rawPersist();lastSnapshot=clone(data);cloudReady=true;render();setSync('Synkronisert','good');
-    }catch(e){
+   console.error(e);cloudReady=true;lastSnapshot=clone(window.getCoachData());render();setSync('Kun lokal cache','warn');
      console.error(e);cloudReady=true;lastSnapshot=clone(data);render();setSync('Kun lokal cache','warn');
     }
   }
@@ -135,7 +136,7 @@ boscoType:r.bosco_type||'CMJ', comment:r.comment||null
     try{
       await flushQueue();
       if(getQueue().length)return;
-      const remote=await fetchRemote();
+      window.setCoachData(remote);rawPersist();lastSnapshot=clone(remote);render();setSync('Synkronisert','good');
       data=remote;rawPersist();lastSnapshot=clone(data);render();setSync('Synkronisert','good');
     }catch(e){console.error(e);setSync('Kunne ikke oppdatere','warn')}
   }
