@@ -619,6 +619,62 @@ document.getElementById('profileTitle').textContent=name+' · utvikling';
   console.error('Kunne ikke hente konkurranseresultater til utøverprofilen:',error);
 }p.scrollIntoView({behavior:'smooth',block:'start'})
 }
+  async function editCompetitionResult(id){
+  try{
+    if(typeof window.cloudFetchCompetitionResults !== 'function'){
+      throw new Error('Kunne ikke hente konkurranseresultatet.');
+    }
+
+    const rows = await window.cloudFetchCompetitionResults();
+    const row = rows.find(r => Number(r.id) === Number(id));
+
+    if(!row){
+      throw new Error('Fant ikke konkurranseresultatet.');
+    }
+
+    const newResult = prompt(
+      'Resultat (meter):',
+      String(row.result_m ?? '').replace('.', ',')
+    );
+
+    if(newResult === null) return;
+
+    const resultM = Number(newResult.replace(',', '.'));
+
+    if(!Number.isFinite(resultM)){
+      alert('Skriv inn et gyldig resultat.');
+      return;
+    }
+
+    if(typeof window.cloudUpdateCompetitionResult !== 'function'){
+      throw new Error('Redigeringsfunksjonen er ikke tilgjengelig ennå.');
+    }
+
+    await window.cloudUpdateCompetitionResult(id,{
+      result_m: resultM
+    });
+
+    await loadCompetitionHistory();
+
+    const profile=document.getElementById('athleteProfile');
+    const profileTitle=document.getElementById('profileTitle');
+
+    if(
+      profile &&
+      profile.classList.contains('open') &&
+      profileTitle
+    ){
+      const athlete=profileTitle.textContent.split(' · ')[0].trim();
+      if(athlete) await openProfile(athlete);
+    }
+
+  }catch(error){
+    console.error(error);
+    alert('Kunne ikke redigere konkurranseresultatet: ' + error.message);
+  }
+}
+
+window.editCompetitionResult = editCompetitionResult;
   async function deleteCompetitionResult(id){
   if(!confirm('Vil du slette dette konkurranseresultatet?')) return;
 
