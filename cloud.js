@@ -115,31 +115,56 @@ boscoType:r.bosco_type||'CMJ', comment:r.comment||null
   async function bootstrap(){
     setSync('Laster data…'); cloudReady=false;
     try{
-      await flushQueue();
-      let remote=await fetchRemote();
-      const migrated=localStorage.getItem(MIGRATION_PREFIX+user.id)==='1';
-      const localData=window.getCoachData();
-if(!remote.length && !migrated && Array.isArray(localData) && localData.length){
-       await uploadRows(localData);
-        await uploadRows(data);
-        localStorage.setItem(MIGRATION_PREFIX+user.id,'1');
-        remote=await fetchRemote();
-     window.setCoachData(remote);rawPersist();lastSnapshot=clone(remote);cloudReady=true;render();setSync('Synkronisert','good');
-      data=remote;rawPersist();lastSnapshot=clone(data);cloudReady=true;render();setSync('Synkronisert','good');
-   console.error(e);cloudReady=true;lastSnapshot=clone(window.getCoachData());render();setSync('Kun lokal cache','warn');
-     console.error(e);cloudReady=true;lastSnapshot=clone(data);render();setSync('Kun lokal cache','warn');
-    }
+  await flushQueue();
+  let remote=await fetchRemote();
+  const migrated=localStorage.getItem(MIGRATION_PREFIX+user.id)==='1';
+  const localData=window.getCoachData();
+
+  if(!remote.length && !migrated && Array.isArray(localData) && localData.length){
+    setSync('Flytter lokale data…');
+    await uploadRows(localData);
+    localStorage.setItem(MIGRATION_PREFIX+user.id,'1');
+    remote=await fetchRemote();
+  }else if(!migrated){
+    localStorage.setItem(MIGRATION_PREFIX+user.id,'1');
   }
-  async function refresh(){
-    if(!client||!user)return;
-    setSync('Oppdaterer…');
-    try{
-      await flushQueue();
-      if(getQueue().length)return;
-      window.setCoachData(remote);rawPersist();lastSnapshot=clone(remote);render();setSync('Synkronisert','good');
-      data=remote;rawPersist();lastSnapshot=clone(data);render();setSync('Synkronisert','good');
-    }catch(e){console.error(e);setSync('Kunne ikke oppdatere','warn')}
+
+  window.setCoachData(remote);
+  rawPersist();
+  lastSnapshot=clone(remote);
+  cloudReady=true;
+  render();
+  setSync('Synkronisert','good');
+
+}catch(e){
+  console.error(e);
+  cloudReady=true;
+  lastSnapshot=clone(window.getCoachData());
+  render();
+  setSync('Kun lokal cache','warn');
+}
+}
+
+async function refresh(){
+  if(!client||!user)return;
+  setSync('Oppdaterer…');
+
+  try{
+    await flushQueue();
+    if(getQueue().length)return;
+
+    const remote=await fetchRemote();
+    window.setCoachData(remote);
+    rawPersist();
+    lastSnapshot=clone(remote);
+    render();
+    setSync('Synkronisert','good');
+
+  }catch(e){
+    console.error(e);
+    setSync('Kunne ikke oppdatere','warn');
   }
+}
   async function signIn(){
     if(!client)return setMsg('Supabase er ikke konfigurert ennå. Fyll inn config.js.','warn');
     const email=document.getElementById('authEmail').value.trim(),password=document.getElementById('authPassword').value;
