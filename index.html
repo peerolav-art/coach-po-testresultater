@@ -251,6 +251,17 @@ data.push(r);persist();['longjump','liakov','sprint','bosco','squat','clean','de
    document.getElementById('compDistance').value = '';
     document.getElementById('compComment').value = '';
 await loadCompetitionHistory();
+    const profile=document.getElementById('athleteProfile');
+const profileTitle=document.getElementById('profileTitle');
+
+if(
+  profile &&
+  profile.classList.contains('open') &&
+  profileTitle &&
+  profileTitle.textContent.startsWith(athlete)
+){
+  await openProfile(athlete);
+}
   }catch(error){
     console.error(error);
     alert('Kunne ikke lagre konkurranseresultatet: ' + error.message);
