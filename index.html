@@ -23,6 +23,9 @@ button{border:0;border-radius:10px;padding:11px 14px;font-weight:700;cursor:poin
 
 .modal{position:fixed;inset:0;background:rgba(17,24,39,.58);display:none;align-items:center;justify-content:center;padding:18px;z-index:50}.modal.open{display:flex}.modalCard{background:white;width:min(1100px,100%);max-height:92vh;overflow:auto;border-radius:18px;padding:20px;box-shadow:0 24px 70px rgba(0,0,0,.25)}.modalHead{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:12px}.modalHead h2{margin:0}.rowActions{display:flex;gap:6px}.rowActions button{padding:8px 10px}.athleteLink{background:none;padding:0;color:var(--accent);font-weight:800;text-align:left}.profile{display:none}.profile.open{display:block}.profileHead{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}.profileSummary{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:14px 0}@media(max-width:650px){.profileSummary{grid-template-columns:1fr 1fr}}.chartGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media(max-width:700px){.chartGrid{grid-template-columns:1fr}}.chartCard{border:1px solid var(--line);border-radius:12px;padding:12px;min-height:220px}.chartCard h3{font-size:13px;margin:0 0 8px}.chartCard canvas{width:100%;height:170px;display:block}.profileHint{font-size:12px;color:var(--muted)}.profileMeta{font-size:12px;color:var(--muted);margin:8px 0 14px}.undatedNote{padding:10px 12px;background:#f7f8fa;border-radius:10px;color:var(--muted);font-size:12px;margin:10px 0}.weatherBadge{display:inline-block;padding:3px 7px;border-radius:999px;background:#eef2ff;color:#2744a5;font-size:10px;font-weight:700}
   @media(max-width:700px){
+    .grid > .card{
+  min-width:0;
+}
     #competitionHistory .test{
   width:100%;
       max-width:100%;
