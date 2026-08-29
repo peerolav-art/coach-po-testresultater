@@ -567,6 +567,30 @@ document.getElementById('profileTitle').textContent=name+' · utvikling';
   });
 
   document.getElementById('profileHistory').innerHTML += competitionHtml;
+      Object.keys(byEvent).forEach((eventType,index)=>{
+  const eventRows = byEvent[eventType]
+    .filter(r=>r.competition_date && Number.isFinite(Number(r.result_m)))
+    .sort((a,b)=>String(a.competition_date).localeCompare(String(b.competition_date)));
+
+  if(eventRows.length < 2) return;
+
+  const chartId = 'competitionChart' + index;
+
+  document.getElementById('profileHistory').innerHTML += `
+    <div class="chartCard" style="margin-top:14px">
+      <h3>${eventType} – utvikling</h3>
+      <canvas id="${chartId}"></canvas>
+    </div>
+  `;
+
+  const canvas = document.getElementById(chartId);
+  const rowsForChart = eventRows.map(r=>({
+    date:r.competition_date,
+    result:Number(r.result_m)
+  }));
+
+  drawChart(canvas, rowsForChart, 'result', false, 2);
+});
 }
     }
   }
