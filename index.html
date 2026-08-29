@@ -565,15 +565,25 @@ document.getElementById('profileTitle').textContent=name+' · utvikling';
         ? `<div class="sub">${r.comment}</div>`
         : '';
 
-      return `
-        <div class="test" style="margin-top:8px">
-          <b>${date}</b>
-          <div>
-            ${result} m${weight}${location}${weather}
-          </div>
-          ${comment}
-        </div>
-      `;
+     return `
+  <div class="test" style="margin-top:8px">
+    <b>${date}</b>
+    <div>
+      ${result} m${weight}${location}${weather}
+    </div>
+    ${comment}
+    <div class="actions" style="margin-top:8px">
+      <button class="secondary" type="button"
+        onclick="editCompetitionResult(${r.id})">
+        Rediger
+      </button>
+      <button class="danger" type="button"
+        onclick="deleteCompetitionResult(${r.id})">
+        Slett
+      </button>
+    </div>
+  </div>
+`;
     }).join('');
   });
 
@@ -609,6 +619,37 @@ document.getElementById('profileTitle').textContent=name+' · utvikling';
   console.error('Kunne ikke hente konkurranseresultater til utøverprofilen:',error);
 }p.scrollIntoView({behavior:'smooth',block:'start'})
 }
+  async function deleteCompetitionResult(id){
+  if(!confirm('Vil du slette dette konkurranseresultatet?')) return;
+
+  try{
+    if(typeof window.cloudDeleteCompetitionResult !== 'function'){
+      throw new Error('Slettefunksjonen er ikke tilgjengelig ennå.');
+    }
+
+    await window.cloudDeleteCompetitionResult(id);
+
+    await loadCompetitionHistory();
+
+    const profile = document.getElementById('athleteProfile');
+    const profileTitle = document.getElementById('profileTitle');
+
+    if(
+      profile &&
+      profile.classList.contains('open') &&
+      profileTitle
+    ){
+      const athlete = profileTitle.textContent.split(' · ')[0].trim();
+      if(athlete) await openProfile(athlete);
+    }
+
+  }catch(error){
+    console.error(error);
+    alert('Kunne ikke slette konkurranseresultatet: ' + error.message);
+  }
+}
+
+window.deleteCompetitionResult = deleteCompetitionResult;
 function startNewTestFromProfile(name){
   const rows=profileRows(name);
   const r=rows.slice().reverse().find(x=>x.birthdate||x.gender||x.group)||rows[rows.length-1]||{};
