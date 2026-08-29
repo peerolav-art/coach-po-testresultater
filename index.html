@@ -484,7 +484,7 @@ document.getElementById('profileTitle').textContent=name+' · utvikling';
  const weatherCell=r=>r.environment==='Ute'?(r.temperature!=null?`${fmt(Number(r.temperature),1)} °C${r.weatherText?' · '+esc(r.weatherText):''}`:(r.weatherText?esc(r.weatherText):'Ute')):(r.environment==='Inne'?'Inne':'–');
  document.getElementById('profileHistory').innerHTML=`${undated?`<div class="undatedNote">Historiske PB-er uten sikker testdato beholdes som referanse, men brukes ikke til å beregne utvikling over tid.</div>`:''}<h3>Historikk</h3><table><thead><tr><th>Dato</th><th>LUT</th><th>Liakov</th><th>20 m</th><th>Bosco</th><th>Sted / vær</th><th></th></tr></thead><tbody>${rows.slice().reverse().map(r=>`<tr><td>${esc(r.date||'–')}${r.testTime?'<br><small>'+esc(r.testTime)+'</small>':''}</td><td>${fmt(r.longjump)} m</td><td>${fmt(r.liakov)} m</td><td>${fmt(r.sprint)} s</td><td>${fmt(r.bosco,1)} cm</td><td>${esc(r.location||'–')}<br><small>${weatherCell(r)}</small></td><td><button class="secondary" onclick="openEdit('${escAttr(r.id)}')">Rediger</button></td></tr>`).join('')}</tbody></table>`;
  }
-      try{}
+      try{
   if(typeof window.cloudFetchCompetitionResults==='function'){
     const competitionRows=await window.cloudFetchCompetitionResults(name);
 
