@@ -32,9 +32,22 @@ white-space:normal;
   overflow:visible;
 }
     #competitionHistory.scroll{
-  overflow:visible;
+  overflow-x:hidden;
   width:100%;
   max-width:100%;
+}
+
+#competitionHistory .test{
+  width:100%;
+  max-width:100%;
+  min-width:0;
+}
+
+#competitionHistory .test > div{
+  white-space:normal;
+  overflow-wrap:anywhere;
+  word-break:normal;
+}
 }
 
 #competitionHistory .test > div{
