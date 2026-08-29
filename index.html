@@ -256,6 +256,7 @@ await loadCompetitionHistory();
     alert('Kunne ikke lagre konkurranseresultatet: ' + error.message);
   }
 }
+  window.saveCompetitionResult = saveCompetitionResult;
 async function loadCompetitionHistory(){
   const box=document.getElementById('competitionHistory');
   if(!box) return;
