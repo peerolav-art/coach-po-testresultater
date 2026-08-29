@@ -489,36 +489,85 @@ document.getElementById('profileTitle').textContent=name+' · utvikling';
     const competitionRows=await window.cloudFetchCompetitionResults(name);
 
     if(competitionRows.length){
-      const competitionHtml=competitionRows.map(r=>{
-        const date=r.competition_date
-          ? r.competition_date.split('-').reverse().join('.')
-          : '–';
 
-        const result=
-          r.result_m===null || r.result_m===undefined
-            ? '–'
-            : Number(r.result_m).toFixed(2).replace('.',',');
+  const byEvent = {};
 
-        const weight=
-          r.implement_weight===null || r.implement_weight===undefined
-            ? ''
-            : ` · ${Number(r.implement_weight).toString().replace('.',',')} ${r.implement_unit||'kg'}`;
+  competitionRows.forEach(r=>{
+    if(!r.event_type) return;
+    if(!byEvent[r.event_type]) byEvent[r.event_type]=[];
+    byEvent[r.event_type].push(r);
+  });
 
-        const location=r.location ? ` · ${r.location}` : '';
-        const weather=r.weather_text ? ` · ${r.weather_text}` : '';
-        const comment=r.comment ? `<div class="sub">${r.comment}</div>` : '';
+  let competitionHtml =
+    `<h3 style="margin-top:20px">Konkurranseresultater</h3>`;
 
-        return `
-          <div class="test" style="margin-top:8px">
-            <b>${date} · ${r.event_type||'Konkurranse'}</b>
-            <div>${result} m${weight}${location}${weather}</div>
-            ${comment}
+  Object.keys(byEvent).forEach(eventType=>{
+
+    const eventRows = byEvent[eventType]
+      .slice()
+      .sort((a,b)=>
+        String(b.competition_date||'')
+          .localeCompare(String(a.competition_date||''))
+      );
+
+    const best = eventRows.reduce((best,r)=>{
+      const value = Number(r.result_m);
+      if(!Number.isFinite(value)) return best;
+      if(!best || value > Number(best.result_m)) return r;
+      return best;
+    },null);
+
+    competitionHtml += `
+      <div class="test" style="margin-top:12px">
+        <b>${eventType}</b>
+        ${
+          best
+            ? `<div><strong>Personlig beste: ${Number(best.result_m)
+                .toFixed(2)
+                .replace('.',',')} m</strong></div>`
+            : ''
+        }
+      </div>
+    `;
+
+    competitionHtml += eventRows.map(r=>{
+
+      const date = r.competition_date
+        ? r.competition_date.split('-').reverse().join('.')
+        : '–';
+
+      const result =
+        r.result_m===null || r.result_m===undefined
+          ? '–'
+          : Number(r.result_m).toFixed(2).replace('.',',');
+
+      const weight =
+        r.implement_weight===null || r.implement_weight===undefined
+          ? ''
+          : ` · ${Number(r.implement_weight)
+              .toString()
+              .replace('.',',')} ${r.implement_unit||'kg'}`;
+
+      const location = r.location ? ` · ${r.location}` : '';
+      const weather = r.weather_text ? ` · ${r.weather_text}` : '';
+      const comment = r.comment
+        ? `<div class="sub">${r.comment}</div>`
+        : '';
+
+      return `
+        <div class="test" style="margin-top:8px">
+          <b>${date}</b>
+          <div>
+            ${result} m${weight}${location}${weather}
           </div>
-        `;
-      }).join('');
+          ${comment}
+        </div>
+      `;
+    }).join('');
+  });
 
-      document.getElementById('profileHistory').innerHTML +=
-        `<h3 style="margin-top:20px">Konkurranseresultater</h3>${competitionHtml}`;
+  document.getElementById('profileHistory').innerHTML += competitionHtml;
+}
     }
   }
 }catch(error){
