@@ -411,6 +411,46 @@ function closeAthleteRegister(){
 
   updateAge();
 }
+
+  async function saveNewAthlete(){
+  const name=document.getElementById('newAthleteName').value.trim();
+  const birthdate=document.getElementById('newAthleteBirthdate').value;
+  const gender=document.getElementById('newAthleteGender').value;
+  const group=document.getElementById('newAthleteGroup').value.trim();
+  const status=document.getElementById('newAthleteStatus');
+
+  if(!name){
+    status.textContent='Skriv inn navn på utøver.';
+    return;
+  }
+
+  if(typeof window.cloudAddAthlete !== 'function'){
+    status.textContent='Lagringsfunksjonen er ikke tilgjengelig.';
+    return;
+  }
+
+  try{
+    status.textContent='Lagrer...';
+
+    const athlete=await window.cloudAddAthlete({
+      name,
+      birthdate,
+      gender,
+      group
+    });
+
+    await loadAthleteRegister();
+
+    const select=document.getElementById('athleteSelect');
+    select.value=String(athlete.id);
+    selectAthleteFromRegister();
+
+    closeAthleteRegister();
+  }catch(e){
+    console.error('Kunne ikke registrere utøver:',e);
+    status.textContent='Kunne ikke registrere utøver: '+(e?.message||e);
+  }
+}
   function applyUserMode(){
   const athleteInput = document.getElementById('athlete');
     const demoBtn = document.getElementById('demoBtn');
