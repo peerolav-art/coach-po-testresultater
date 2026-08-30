@@ -192,7 +192,7 @@ white-space:normal;
 </section>
 <section class="card">
 <div class="topbar"><h2>Resultater</h2><input id="search" placeholder="Søk utøver..." oninput="render()"></div><div id="importReceipt" class="importReceipt"></div><div class="stats" id="stats"></div><div class="scroll"><div id="results"></div></div>
-<div class="actions"><button class="secondary" onclick="exportCSV()">Eksporter CSV</button><button class="secondary" onclick="loadDemo()">Legg inn eksempeldata</button><button class="danger" onclick="clearAll()">Slett alle</button></div>
+<div class="actions"><button class="secondary" onclick="exportCSV()">Eksporter CSV</button><button id="demoBtn" class="secondary" onclick="loadDemo()">Legg inn eksempeldata</button><button id="clearAllBtn" class="danger" onclick="clearAll()">Slett alle</button></div>
 </section>
   <section class="card">
   <div class="topbar">
@@ -313,13 +313,19 @@ function makeId(){return Date.now()+Math.floor(Math.random()*1000000000)}
 function val(id){const v=document.getElementById(id).value.trim();return v===''?null:v}function num(id){const v=val(id);return v===null?null:Number(v)}
   function applyUserMode(){
   const athleteInput = document.getElementById('athlete');
+    const demoBtn = document.getElementById('demoBtn');
+const clearAllBtn = document.getElementById('clearAllBtn');
   if(!athleteInput) return;
 
   if(window.COACH_PO_ROLE === 'athlete'){
     athleteInput.value = window.COACH_PO_DISPLAY_NAME || '';
     athleteInput.readOnly = true;
+    if(demoBtn) demoBtn.style.display = 'none';
+if(clearAllBtn) clearAllBtn.style.display = 'none';
   }else{
     athleteInput.readOnly = false;
+    if(demoBtn) demoBtn.style.display = '';
+if(clearAllBtn) clearAllBtn.style.display = '';
   }
 }
   setTimeout(applyUserMode, 2500);
