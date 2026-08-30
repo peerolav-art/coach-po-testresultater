@@ -322,7 +322,7 @@ function val(id){const v=document.getElementById(id).value.trim();return v===''?
     athleteInput.readOnly = false;
   }
 }
-  setTimeout(applyUserMode, 1200);
+  setTimeout(applyUserMode, 2500);
 async function saveResult(){
  const athlete = window.COACH_PO_ROLE === 'athlete'
   ? (window.COACH_PO_DISPLAY_NAME || '').trim()
