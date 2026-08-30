@@ -169,7 +169,15 @@ white-space:normal;
 <main id="appMain" style="display:none"><div class="grid">
 <section class="card">
 <h2>Registrer test</h2>
-<div class="field"><label>Utøver</label><input id="athlete" placeholder="Navn"><input id="athleteId" type="hidden"></div>
+<div class="field">
+  <label>Utøver</label>
+  <select id="athleteSelect" onchange="selectAthleteFromRegister()">
+    <option value="">Velg registrert utøver...</option>
+  </select>
+  <input id="athlete" type="hidden">
+  <input id="athleteId" type="hidden">
+  <button class="secondary" type="button" onclick="openAthleteRegister()">Registrer ny utøver</button>
+</div>
 <div class="row"><div class="field"><label>Fødselsdato</label><input id="birthdate" type="date" oninput="updateAge()"></div><div class="field"><label>Alder</label><input id="age" readonly placeholder="Beregnes automatisk"></div></div>
 <div class="row"><div class="field"><label>Kjønn</label><select id="gender"><option value="">Ikke angitt</option><option>Kvinne</option><option>Mann</option><option>Annet</option><option>Ønsker ikke å oppgi</option></select></div><div class="field"><label>Gruppe / lag</label><input id="group" placeholder="Valgfritt"></div></div>
 <div class="row"><div class="field"><label>Testdato</label><input id="date" type="date" oninput="updateAge();weatherDateChanged()"></div><div class="field"><label>Testtidspunkt</label><input id="testTime" type="time"></div></div><div class="row"><div class="field"><label>Sted</label><div style="display:flex;gap:6px"><input id="location" placeholder="Fylles automatisk"><button type="button" class="secondary" onclick="detectLocation()" title="Finn sted">Finn</button></div></div><div class="field"><label>Testforhold</label><select id="environment" onchange="environmentChanged()"><option value="">Ikke angitt</option><option value="Inne">Inne</option><option value="Ute">Ute</option></select></div></div><div id="locationStatus" class="note locationStatus">Forsøker å finne sted automatisk…</div><div class="row" id="weatherFields" style="display:none"><div class="field"><label>Temperatur (°C)</label><input id="temperature" type="number" step="0.1" placeholder="Hentes automatisk"></div><div class="field"><label>Vær</label><div style="display:flex;gap:6px"><input id="weatherText" placeholder="Hentes automatisk"><button type="button" class="secondary" onclick="fetchWeatherForTest()">Hent vær</button></div></div></div><div id="weatherStatus" class="note weatherStatus" style="display:none">Velg Ute for å hente vær og temperatur.</div>
@@ -309,9 +317,46 @@ document.getElementById('testTime').value=new Date().toTimeString().slice(0,5);
 updateAge();
 setTimeout(detectLocation,300);
   setTimeout(loadCompetitionHistory,1000);
+  setTimeout(loadAthleteRegister,1200);
 function uid(){return Date.now()*1000+Math.floor(Math.random()*1000)}
 function makeId(){return Date.now()+Math.floor(Math.random()*1000000000)}
 function val(id){const v=document.getElementById(id).value.trim();return v===''?null:v}function num(id){const v=val(id);return v===null?null:Number(v)}
+  async function loadAthleteRegister(){
+  if(typeof window.cloudFetchAthletes !== 'function') return;
+
+  try{
+    const athletes = await window.cloudFetchAthletes();
+    const select = document.getElementById('athleteSelect');
+    if(!select) return;
+
+    select.innerHTML =
+      '<option value="">Velg registrert utøver...</option>' +
+      athletes.map(a =>
+        `<option value="${a.id}"
+          data-name="${escAttr(a.name||'')}"
+          data-birthdate="${escAttr(a.birthdate||'')}"
+          data-gender="${escAttr(a.gender||'')}"
+          data-group="${escAttr(a.athlete_group||'')}">
+          ${esc(a.name||'')}
+        </option>`
+      ).join('');
+  }catch(e){
+    console.error('Kunne ikke hente utøverregister:',e);
+  }
+}
+  function selectAthleteFromRegister(){
+  const select=document.getElementById('athleteSelect');
+  const option=select?.selectedOptions?.[0];
+  if(!option) return;
+
+  document.getElementById('athleteId').value=option.value||'';
+  document.getElementById('athlete').value=option.dataset.name||'';
+  document.getElementById('birthdate').value=option.dataset.birthdate||'';
+  document.getElementById('gender').value=option.dataset.gender||'';
+  document.getElementById('group').value=option.dataset.group||'';
+
+  updateAge();
+}
   function applyUserMode(){
   const athleteInput = document.getElementById('athlete');
     const demoBtn = document.getElementById('demoBtn');
