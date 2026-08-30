@@ -26,7 +26,7 @@
   function setQueue(q){localStorage.setItem(queueKey(),JSON.stringify(q))}
   function toDb(r){return {
     id:Number.isFinite(Number(r.id))?Math.trunc(Number(r.id)):Date.now()*1000+Math.floor(Math.random()*1000),
-    user_id:user.id, athlete:r.athlete||'', birthdate:r.birthdate||null,
+    user_id:user.id, athlete_id:validNum(r.athleteId), athlete:r.athlete||'', birthdate:r.birthdate||null,
     gender:r.gender||null, test_date:r.date||null, test_time:r.testTime||null, location:r.location||null, athlete_group:r.group||null,
     test_environment:r.environment||null, temperature_c:validNum(r.temperature), weather_text:r.weatherText||null, latitude:validNum(r.latitude), longitude:validNum(r.longitude),
    longjump:validNum(r.longjump), liakov:validNum(r.ljakov), ball:validNum(r.ball), sprint:validNum(r.sprint), squat:validNum(r.squat),
@@ -36,6 +36,7 @@ bosco:validNum(r.bosco), bosco_type:r.boscoType||null, comment:r.comment||null
   function validNum(v){return v==null||v===''?null:(Number.isFinite(Number(v))?Number(v):null)}
   function fromDb(r){return {
   id:r.id,
+    athleteId:r.athlete_id,
   athlete:r.athlete,
   birthdate:r.birthdate,
   gender:r.gender,
@@ -64,6 +65,17 @@ bosco:validNum(r.bosco), bosco_type:r.boscoType||null, comment:r.comment||null
   boscoType:r.bosco_type||'CMJ',
   comment:r.comment||null
 }}
+  async function fetchAthletes(){
+  if(!client || !user) return [];
+
+  const {data,error}=await client
+    .from('athletes')
+    .select('id,name,birthdate,gender,athlete_group')
+    .order('name',{ascending:true});
+
+  if(error) throw error;
+  return data || [];
+}
   function same(a,b){return JSON.stringify(a)===JSON.stringify(b)}
   function enqueueDiff(prev,cur){
     if(!user)return;
@@ -467,6 +479,7 @@ window.cloudFetchCompetitionResults=fetchCompetitionResults;
   window.cloudDeleteCompetitionResult=deleteCompetitionResult;
   window.cloudUpdateCompetitionResult=updateCompetitionResult;
   window.cloudDeleteAthleteData=deleteAthleteData;
+  window.cloudFetchAthletes=fetchAthletes;
 window.cloudSignIn=signIn;window.cloudSignUp=signUp;window.cloudSignOut=signOut;window.cloudRefresh=refresh;window.cloudRequestPasswordReset=requestPasswordReset;
   window.addEventListener('online',()=>{setSync('Online – synkroniserer…');flushQueue().then(refresh)});
   document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&user)refresh()});
