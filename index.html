@@ -303,7 +303,45 @@ white-space:normal;
   <div class="test"><b>Markløft <span class="unit">kg</span></b><div class="field"><input id="editDeadlift" type="number" min="0" step="0.1"></div></div>
   <div class="test"><b>Benkpress <span class="unit">kg</span></b><div class="field"><input id="editBench" type="number" min="0" step="0.1"></div></div>
 </div><div class="test"><b>Bosco <span class="unit">cm</span></b><div class="field"><input id="editBosco" type="number" min="0" step="0.1"></div></div></div><div class="row"><div class="field"><label>Liakov ballvekt (kg)</label><input id="editBall" type="number" min="0" step="0.1"></div><div class="field"><label>Bosco-type</label><select id="editBoscoType"><option>CMJ</option><option>SJ</option><option>15 sek</option><option>30 sek</option><option>Annet</option></select></div></div><div class="field"><label>Kommentar</label><input id="editComment"></div><div class="actions"><button class="primary" id="saveEditBtn" type="button" onclick="saveEdit()">Lagre endringer</button><button class="ghost" onclick="closeEdit()">Avbryt</button></div></div></div>
-<script type="module">
+<div class="modal" id="athleteRegisterModal" onclick="if(event.target===this)closeAthleteRegister()">
+  <div class="modalCard">
+    <div class="modalHead">
+      <h2>Registrer ny utøver</h2>
+      <button class="ghost" type="button" onclick="closeAthleteRegister()">Lukk</button>
+    </div>
+
+    <div class="field">
+      <label>Navn</label>
+      <input id="newAthleteName" placeholder="Fullt navn">
+    </div>
+
+    <div class="row">
+      <div class="field">
+        <label>Fødselsdato</label>
+        <input id="newAthleteBirthdate" type="date">
+      </div>
+
+      <div class="field">
+        <label>Kjønn</label>
+        <select id="newAthleteGender">
+          <option value="">Ikke angitt</option>
+          <option>Kvinne</option>
+          <option>Mann</option>
+          <option>Annet</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Gruppe / lag</label>
+      <input id="newAthleteGroup" placeholder="Valgfritt">
+    </div>
+
+    <button class="primary wide" type="button" onclick="saveNewAthlete()">Lagre utøver</button>
+    <div id="newAthleteStatus" class="note"></div>
+  </div>
+</div>
+  <script type="module">
 import * as pdfjsLib from 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.min.mjs';
 pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.worker.min.mjs';
 window.pdfjsLib=pdfjsLib;
@@ -321,6 +359,22 @@ setTimeout(detectLocation,300);
 function uid(){return Date.now()*1000+Math.floor(Math.random()*1000)}
 function makeId(){return Date.now()+Math.floor(Math.random()*1000000000)}
 function val(id){const v=document.getElementById(id).value.trim();return v===''?null:v}function num(id){const v=val(id);return v===null?null:Number(v)}
+  function openAthleteRegister(){
+  const modal=document.getElementById('athleteRegisterModal');
+  if(!modal) return;
+
+  document.getElementById('newAthleteName').value='';
+  document.getElementById('newAthleteBirthdate').value='';
+  document.getElementById('newAthleteGender').value='';
+  document.getElementById('newAthleteGroup').value='';
+  document.getElementById('newAthleteStatus').textContent='';
+
+  modal.classList.add('open');
+}
+
+function closeAthleteRegister(){
+  document.getElementById('athleteRegisterModal')?.classList.remove('open');
+}
   async function loadAthleteRegister(){
   if(typeof window.cloudFetchAthletes !== 'function') return;
 
