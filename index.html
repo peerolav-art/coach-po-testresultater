@@ -273,6 +273,7 @@ white-space:normal;
 <div class="profileHead"><div><h2 id="profileTitle">Utøverprofil</h2><div class="profileHint">Utvikling over tid. For 20 m sprinavere tid bedre. Målinger uten dato vises i historikken, men brukes ikke som tidsakse.</div></div><<div style="display:flex;gap:8px;align-items:center">
   <button class="secondary" onclick="startNewTestFromProfile(document.getElementById('profileTitle').textContent.replace(' · utvikling',''))">Registrer ny test</button>
   <button class="ghost" onclick="closeProfile()">Lukk profil</button>
+  <button class="danger" type="button" onclick="deleteAthleteFromProfile()">Slett utøver</button>
 </div></div><div class="profileMeta" id="profileMeta"></div>
 <div class="profileSummary" id="profileSummary"></div>
 <div class="chartGrid" id="profileCharts"></div>
@@ -632,6 +633,47 @@ async function saveEdit(){
 }
 function openProfileById(id){const r=findById(id);if(r)openProfile(r.athlete)}
 function closeProfile(){document.getElementById('athleteProfile').classList.remove('open')}
+  async function deleteAthleteFromProfile(){
+  if(window.COACH_PO_ROLE !== 'coach'){
+    alert('Bare coach kan slette en utøver.');
+    return;
+  }
+
+  const title=document.getElementById('profileTitle')?.textContent || '';
+  const athlete=title.replace(' · utvikling','').trim();
+  if(!athlete) return;
+
+  const ok=confirm(
+    `Vil du slette ${athlete} og alle test- og konkurranseresultater? Dette kan ikke angres.`
+  );
+  if(!ok) return;
+
+  if(typeof window.cloudDeleteAthleteData !== 'function'){
+    alert('Slettefunksjonen er ikke koblet til databasen ennå.');
+    return;
+  }
+
+  try{
+    await window.cloudDeleteAthleteData(athlete);
+
+    data=data.filter(r =>
+      String(r.athlete||'').trim().toLowerCase() !== athlete.toLowerCase()
+    );
+
+    persist();
+    closeProfile();
+    render();
+
+    if(typeof loadCompetitionHistory === 'function'){
+      await loadCompetitionHistory();
+    }
+
+    alert(`${athlete} og tilhørende resultater er slettet.`);
+  }catch(e){
+    console.error('Kunne ikke slette utøver:',e);
+    alert('Kunne ikke slette utøveren: '+(e?.message||e));
+  }
+}
 function profileRows(name){return data.filter(r=>(r.athlete||'').trim().toLowerCase()===name.trim().toLowerCase()).sort((a,b)=>{if(a.date&&b.date)return a.date.localeCompare(b.date);if(a.date)return-1;if(b.date)return 1;return 0})}
 function datedMetricRows(rows,key){return rows.filter(r=>r.date&&r[key]!=null&&Number(r[key])>0)}
 function changeText(rows,key,lower=false,d=2,unit=''){const vals=datedMetricRows(rows,key);if(vals.length<2)return 'Trenger minst 2 daterte målinger';const first=Number(vals[0][key]),last=Number(vals[vals.length-1][key]),diff=last-first;const improved=lower?diff<0:diff>0;return `${improved?'▲':'▼'} ${diff>0?'+':''}${fmt(diff,d)}${unit} fra første til siste`}
