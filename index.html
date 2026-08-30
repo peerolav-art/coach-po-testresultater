@@ -196,7 +196,7 @@ white-space:normal;
 </div>
 <div class="row"><div class="field"><label>Liakov ballvekt (kg)</label><input id="ball" type="number" min="0" step="0.1" placeholder="3"></div><div class="field"><label>Bosco-type</label><select id="boscoType"><option>CMJ</option><option>SJ</option><option>15 sek</option><option>30 sek</option><option>Annet</option></select></div></div>
 <div class="field"><label>Kommentar</label><input id="comment" placeholder="F.eks. underlag, sko, dagsform"></div>
-<button class="primary wide" type="button" onclick="this.disabled=true;this.textContent='Lagrer...';Promise.resolve(saveResult()).finally(()=>{this.disabled=false;this.textContent='Lagre resultat';})">Lagre resultat</button><div class="note">Resultatet lagres i felles database og caches lokalt ved behov.</div>
+<button class="primary wide" type="button" onclick="this.disabled=true;this.textContent='Lagrer – vent...';Promise.resolve(saveResult()).finally(()=>{this.disabled=false;this.textContent='Lagre resultat';})">Lagre resultat</button><div class="note">Resultatet lagres i felles database og caches lokalt ved behov.</div>
 </section>
 <section class="card">
 <div class="topbar"><h2>Resultater</h2><input id="search" placeholder="Søk utøver..." oninput="render()"></div><div id="importReceipt" class="importReceipt"></div><div class="stats" id="stats"></div><div class="scroll"><div id="results"></div></div>
@@ -489,7 +489,7 @@ if(!athlete){
 squat:num('squat'),clean:num('clean'),deadlift:num('deadlift'),bench:num('bench'),
 boscoType:val('boscoType'),comment:val('comment')};
 if([r.longjump,r.liakov,r.sprint,r.bosco,r.squat,r.clean,r.deadlift,r.bench].every(x=>x===null)){alert('Registrer minst ett testresultat.');return}
-data.push(r);persist();['longjump','liakov','sprint','bosco','squat','clean','deadlift','bench','comment'].forEach(x=>document.getElementById(x).value='');render();alert('Resultatet er lagret ✓');
+data.push(r);persist();alert('Resultatet er lagret ✓');['longjump','liakov','sprint','bosco','squat','clean','deadlift','bench','comment'].forEach(x=>document.getElementById(x).value='');render();
 }async function saveCompetitionResult(){
   const athlete = document.getElementById('compAthlete').value.trim();
   const date = document.getElementById('compDate').value;
