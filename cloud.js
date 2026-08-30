@@ -401,6 +401,36 @@ const {data:updated,error}=await updateQuery.select('id');
 
   return true;
 }
+  async function deleteAthleteData(athlete){
+  if(!client || !user){
+    throw new Error('Ikke koblet til databasen.');
+  }
+
+  if(window.COACH_PO_ROLE !== 'coach'){
+    throw new Error('Bare coach kan slette en utøver.');
+  }
+
+  const name=String(athlete||'').trim();
+  if(!name){
+    throw new Error('Utøvernavn mangler.');
+  }
+
+  const {error:testError}=await client
+    .from('test_results')
+    .delete()
+    .eq('athlete',name);
+
+  if(testError) throw testError;
+
+  const {error:competitionError}=await client
+    .from('competition_results')
+    .delete()
+    .eq('athlete',name);
+
+  if(competitionError) throw competitionError;
+
+  return true;
+}
   async function updateCompetitionResult(id,changes){
   if(!client || !user){
     throw new Error('Ikke koblet til databasen.');
@@ -436,6 +466,7 @@ const {data:updated,error}=await updateQuery.select('id');
 window.cloudFetchCompetitionResults=fetchCompetitionResults;
   window.cloudDeleteCompetitionResult=deleteCompetitionResult;
   window.cloudUpdateCompetitionResult=updateCompetitionResult;
+  window.cloudDeleteAthleteData=deleteAthleteData;
 window.cloudSignIn=signIn;window.cloudSignUp=signUp;window.cloudSignOut=signOut;window.cloudRefresh=refresh;window.cloudRequestPasswordReset=requestPasswordReset;
   window.addEventListener('online',()=>{setSync('Online – synkroniserer…');flushQueue().then(refresh)});
   document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&user)refresh()});
