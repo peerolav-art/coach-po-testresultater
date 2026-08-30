@@ -1390,14 +1390,14 @@ window.deleteCompetitionResult = deleteCompetitionResult;
     const looksLikeHeader = text =>
       /navn|utøver|dato|lut|liakov|sprint|bosco|knebøy|frivending|markløft|benkpress/i.test(text);
 
-    const strengthOnly =
-  /Dato\s+Knebøy\s+Markløft\s+Benkpress/i.test(pdfRawText);
+   const strengthOnly =
+  /Dato[\s\S]*Knebøy[\s\S]*Markløft[\s\S]*Benkpress/i.test(pdfRawText);
 
-const athleteMatch =
-  pdfRawText.match(/^(.+?)\s*-\s*Styrkeresultater/im);
+const firstLine = pdfRawText.split(/\r?\n/)[0] || '';
 
-const defaultAthlete =
-  athleteMatch ? athleteMatch[1].trim() : '';
+const defaultAthlete = firstLine
+  .replace(/\s*-\s*Styrkeresultater.*$/i, '')
+  .trim();
 
 for (const line of lines) {
   if (looksLikeHeader(line)) continue;
