@@ -460,6 +460,7 @@ window.COACH_PO_DISPLAY_NAME=data?.display_name || '';
   user=session?.user||null;
     if(user){
   window.COACH_PO_ROLE=await loadUserRole();
+      if(typeof applyUserMode === 'function') applyUserMode();
 }else{
   window.COACH_PO_ROLE='athlete';
 }
