@@ -1390,63 +1390,78 @@ window.deleteCompetitionResult = deleteCompetitionResult;
     const looksLikeHeader = text =>
       /navn|utøver|dato|lut|liakov|sprint|bosco|knebøy|frivending|markløft|benkpress/i.test(text);
 
-    for (const line of lines) {
-      if (looksLikeHeader(line)) continue;
+    const strengthOnly =
+  /Dato\s+Knebøy\s+Markløft\s+Benkpress/i.test(pdfRawText);
 
-      const parts = line.split(/\s{2,}|\t+/).filter(Boolean);
+const athleteMatch =
+  pdfRawText.match(/^(.+?)\s*-\s*Styrkeresultater/im);
 
-      if (parts.length < 2) continue;
+const defaultAthlete =
+  athleteMatch ? athleteMatch[1].trim() : '';
 
-      let dateIndex = parts.findIndex(p =>
-        /\d{1,2}[.\-/]\d{1,2}[.\-/]\d{4}|\d{4}-\d{1,2}-\d{1,2}/.test(p)
-      );
+for (const line of lines) {
+  if (looksLikeHeader(line)) continue;
 
-      if (dateIndex < 0) continue;
+  const parts = line.split(/\s+/).filter(Boolean);
 
-      const athlete = parts.slice(0, dateIndex).join(' ').trim();
-      const date = dateValue(parts[dateIndex]);
+  if (parts.length < 2) continue;
 
-      if (!athlete || !date) continue;
+  const dateIndex = parts.findIndex(p =>
+    /\d{1,2}[.\-/]\d{1,2}[.\-/]\d{4}|\d{4}-\d{1,2}-\d{1,2}/.test(p)
+  );
 
-      const values = parts.slice(dateIndex + 1).map(numberValue);
+  if (dateIndex < 0) continue;
 
-      const row = {
-        id: makeId(),
-        athlete,
-        date,
-        birthdate: '',
-        gender: '',
-        group: '',
-        testTime: '',
-        location: '',
-        environment: '',
-        temperature: null,
-        weatherText: '',
+  const athlete =
+    parts.slice(0, dateIndex).join(' ').trim() || defaultAthlete;
 
-        longjump: values[0] ?? null,
-        liakov: values[1] ?? null,
-        sprint: values[2] ?? null,
-        bosco: values[3] ?? null,
+  const date = dateValue(parts[dateIndex]);
 
-        squat: values[4] ?? null,
-        clean: values[5] ?? null,
-        deadlift: values[6] ?? null,
-        bench: values[7] ?? null
-      };
+  if (!athlete || !date) continue;
 
-      const hasResult = [
-        row.longjump,
-        row.liakov,
-        row.sprint,
-        row.bosco,
-        row.squat,
-        row.clean,
-        row.deadlift,
-        row.bench
-      ].some(v => v !== null && Number.isFinite(Number(v)));
+  const values = parts
+    .slice(dateIndex + 1)
+    .map(numberValue)
+    .filter(v => v !== null);
 
-      if (hasResult) pdfRows.push(row);
-    }
+  const row = {
+    id: makeId(),
+    athlete,
+    date,
+    birthdate: '',
+    gender: '',
+    group: '',
+    testTime: '',
+    location: '',
+    environment: '',
+    temperature: null,
+    weatherText: '',
+
+    longjump: strengthOnly ? null : (values[0] ?? null),
+    liakov: strengthOnly ? null : (values[1] ?? null),
+    sprint: strengthOnly ? null : (values[2] ?? null),
+    bosco: strengthOnly ? null : (values[3] ?? null),
+
+    squat: strengthOnly ? (values[0] ?? null) : (values[4] ?? null),
+    clean: strengthOnly ? null : (values[5] ?? null),
+    deadlift: strengthOnly ? (values[1] ?? null) : (values[6] ?? null),
+    bench: strengthOnly ? (values[2] ?? null) : (values[7] ?? null)
+  };
+
+  const hasResult = [
+    row.longjump,
+    row.liakov,
+    row.sprint,
+    row.bosco,
+    row.squat,
+    row.clean,
+    row.deadlift,
+    row.bench
+  ].some(v => v !== null && Number.isFinite(Number(v)));
+
+  if (hasResult) pdfRows.push(row);
+}
+    
 
     if (preview) {
       if (pdfRows.length) {
