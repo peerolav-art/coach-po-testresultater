@@ -419,7 +419,7 @@ window.cloudSignIn=signIn;window.cloudSignUp=signUp;window.cloudSignOut=signOut;
 
   const {data,error}=await client
     .from('user_roles')
-    .select('role')
+    .select('role, display_name')
     .eq('user_id',user.id)
     .maybeSingle();
 
@@ -427,7 +427,7 @@ window.cloudSignIn=signIn;window.cloudSignUp=signUp;window.cloudSignOut=signOut;
     console.error('Kunne ikke hente brukerrolle:',error);
     return 'athlete';
   }
-
+window.COACH_PO_DISPLAY_NAME=data?.display_name || '';
   return data?.role || 'athlete';
 }
   client.auth.onAuthStateChange(async(event,session)=>{
