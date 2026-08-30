@@ -169,7 +169,7 @@ white-space:normal;
 <main id="appMain" style="display:none"><div class="grid">
 <section class="card">
 <h2>Registrer test</h2>
-<div class="field"><label>Utøver</label><input id="athlete" placeholder="Navn"></div>
+<div class="field"><label>Utøver</label><input id="athlete" placeholder="Navn"><input id="athleteId" type="hidden"></div>
 <div class="row"><div class="field"><label>Fødselsdato</label><input id="birthdate" type="date" oninput="updateAge()"></div><div class="field"><label>Alder</label><input id="age" readonly placeholder="Beregnes automatisk"></div></div>
 <div class="row"><div class="field"><label>Kjønn</label><select id="gender"><option value="">Ikke angitt</option><option>Kvinne</option><option>Mann</option><option>Annet</option><option>Ønsker ikke å oppgi</option></select></div><div class="field"><label>Gruppe / lag</label><input id="group" placeholder="Valgfritt"></div></div>
 <div class="row"><div class="field"><label>Testdato</label><input id="date" type="date" oninput="updateAge();weatherDateChanged()"></div><div class="field"><label>Testtidspunkt</label><input id="testTime" type="time"></div></div><div class="row"><div class="field"><label>Sted</label><div style="display:flex;gap:6px"><input id="location" placeholder="Fylles automatisk"><button type="button" class="secondary" onclick="detectLocation()" title="Finn sted">Finn</button></div></div><div class="field"><label>Testforhold</label><select id="environment" onchange="environmentChanged()"><option value="">Ikke angitt</option><option value="Inne">Inne</option><option value="Ute">Ute</option></select></div></div><div id="locationStatus" class="note locationStatus">Forsøker å finne sted automatisk…</div><div class="row" id="weatherFields" style="display:none"><div class="field"><label>Temperatur (°C)</label><input id="temperature" type="number" step="0.1" placeholder="Hentes automatisk"></div><div class="field"><label>Vær</label><div style="display:flex;gap:6px"><input id="weatherText" placeholder="Hentes automatisk"><button type="button" class="secondary" onclick="fetchWeatherForTest()">Hent vær</button></div></div></div><div id="weatherStatus" class="note weatherStatus" style="display:none">Velg Ute for å hente vær og temperatur.</div>
@@ -343,7 +343,7 @@ if(!athlete){
   return;
 }
  if(val('environment')==='Ute' && val('temperature')==null){try{await fetchWeatherForTest()}catch(e){}}
- const r={id:uid(),athlete,birthdate:val('birthdate'),gender:val('gender'),date:val('date'),testTime:val('testTime'),location:val('location'),group:val('group'),
+ const r={id:uid(),athleteId:val('athleteId')?Number(val('athleteId')):null,athlete,birthdate:val('birthdate'),gender:val('gender'),date:val('date'),testTime:val('testTime'),location:val('location'),group:val('group'),
  environment:val('environment'),temperature:num('temperature'),weatherText:val('weatherText'),latitude:lastLat,longitude:lastLon,
  longjump:num('longjump'),liakov:num('liakov'),ball:num('ball'),sprint:num('sprint'),bosco:num('bosco'),
 
