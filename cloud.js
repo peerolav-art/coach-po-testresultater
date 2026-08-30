@@ -414,8 +414,29 @@ window.cloudSignIn=signIn;window.cloudSignUp=signUp;window.cloudSignOut=signOut;
   }
   if(!window.supabase?.createClient){showLoggedIn(false);setMsg('Kunne ikke laste Supabase-biblioteket. Kontroller internettilkoblingen.','warn');return}
   client=window.supabase.createClient(cfg.url,cfg.anonKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+  async function loadUserRole(){
+  if(!client || !user) return 'athlete';
+
+  const {data,error}=await client
+    .from('user_roles')
+    .select('role')
+    .eq('user_id',user.id)
+    .maybeSingle();
+
+  if(error){
+    console.error('Kunne ikke hente brukerrolle:',error);
+    return 'athlete';
+  }
+
+  return data?.role || 'athlete';
+}
   client.auth.onAuthStateChange(async(event,session)=>{
   user=session?.user||null;
+    if(user){
+  window.COACH_PO_ROLE=await loadUserRole();
+}else{
+  window.COACH_PO_ROLE='athlete';
+}
 
   if(event==='PASSWORD_RECOVERY'){
     showLoggedIn(false);
