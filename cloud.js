@@ -292,11 +292,15 @@ bench:validNum(row.bench),
       comment:row.comment||null, updated_at:new Date().toISOString()
     };
     setSync('Lagrer…');
-    const {data:updated,error}=await client.from('test_results')
-      .update(payload)
-      .eq('user_id',user.id)
-      .eq('id',Math.trunc(id))
-      .select('id');
+    let updateQuery=client.from('test_results')
+  .update(payload)
+  .eq('id',Math.trunc(id));
+
+if(window.COACH_PO_ROLE !== 'coach'){
+  updateQuery=updateQuery.eq('user_id',user.id);
+}
+
+const {data:updated,error}=await updateQuery.select('id');
     if(error){setSync('Lagringsfeil','warn');throw error;}
     if(!updated||updated.length!==1){setSync('Lagringsfeil','warn');throw new Error('Fant ikke resultatet som skulle oppdateres.');}
     rawPersist();lastSnapshot=clone(data);setSync('Synkronisert','good');
