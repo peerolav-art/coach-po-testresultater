@@ -76,6 +76,29 @@ bosco:validNum(r.bosco), bosco_type:r.boscoType||null, comment:r.comment||null
   if(error) throw error;
   return data || [];
 }
+  async function addAthlete(row){
+  if(!client || !user) throw new Error('Ikke koblet til databasen.');
+
+  const name=String(row.name||'').trim();
+  if(!name) throw new Error('Utøvernavn mangler.');
+
+  const payload={
+    name,
+    birthdate:row.birthdate||null,
+    gender:row.gender||null,
+    athlete_group:row.group||null,
+    created_by:user.id
+  };
+
+  const {data,error}=await client
+    .from('athletes')
+    .insert(payload)
+    .select('id,name,birthdate,gender,athlete_group')
+    .single();
+
+  if(error) throw error;
+  return data;
+}
   function same(a,b){return JSON.stringify(a)===JSON.stringify(b)}
   function enqueueDiff(prev,cur){
     if(!user)return;
@@ -480,6 +503,7 @@ window.cloudFetchCompetitionResults=fetchCompetitionResults;
   window.cloudUpdateCompetitionResult=updateCompetitionResult;
   window.cloudDeleteAthleteData=deleteAthleteData;
   window.cloudFetchAthletes=fetchAthletes;
+  window.cloudAddAthlete=addAthlete;
 window.cloudSignIn=signIn;window.cloudSignUp=signUp;window.cloudSignOut=signOut;window.cloudRefresh=refresh;window.cloudRequestPasswordReset=requestPasswordReset;
   window.addEventListener('online',()=>{setSync('Online – synkroniserer…');flushQueue().then(refresh)});
   document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&user)refresh()});
