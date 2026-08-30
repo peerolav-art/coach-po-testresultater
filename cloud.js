@@ -136,6 +136,21 @@ bosco:validNum(r.bosco), bosco_type:r.boscoType||null, comment:r.comment||null
   }
   async function bootstrap(){
     setSync('Laster data…'); cloudReady=false;
+    if(window.COACH_PO_ROLE==='athlete'){
+  try{
+    const remote=await fetchRemote();
+    window.setCoachData(remote);
+    rawPersist();
+    lastSnapshot=clone(remote);
+    cloudReady=true;
+    setSync('Synkronisert','good');
+    if(typeof render==='function') render();
+  }catch(error){
+    console.error(error);
+    setSync('Kun lokal cache','warn');
+  }
+  return;
+}
     try{
   await flushQueue();
   let remote=await fetchRemote();
