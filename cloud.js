@@ -123,9 +123,20 @@ bosco:validNum(r.bosco), bosco_type:r.boscoType||null, comment:r.comment||null
     return [...map.values()];
   }
   async function fetchRemote(){
-    const {data:rows,error}=await client.from('test_results').select('*').eq('user_id',user.id).order('created_at',{ascending:true});
-    if(error)throw error;return (rows||[]).map(fromDb);
+  let query = client
+    .from('test_results')
+    .select('*')
+    .order('created_at',{ascending:true});
+
+  if(window.COACH_PO_ROLE !== 'coach'){
+    query = query.eq('user_id', user.id);
   }
+
+  const {data:rows,error} = await query;
+  if(error) throw error;
+
+  return (rows||[]).map(fromDb);
+}
   async function uploadRows(rows){
     if(!rows.length)return;
     const clean=dedupe(rows).map((r,i)=>{if(r.id==null||r.id==='')r.id='migrated-'+Date.now()+'-'+i;return r});
