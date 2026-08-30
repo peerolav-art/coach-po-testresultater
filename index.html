@@ -1288,7 +1288,253 @@ async function deleteCompetitionResult(id){
 
 window.deleteCompetitionResult = deleteCompetitionResult;     
   </script>
+<script>
+  async function pdfFileSelected() {
+  const input = document.getElementById('pdfFile');
+  const status = document.getElementById('pdfStatus');
+  const preview = document.getElementById('pdfPreview');
+  const actions = document.getElementById('pdfActions');
+  const rawBox = document.getElementById('pdfRaw');
 
+  pdfRows = [];
+  pdfRawText = '';
+
+  if (!input || !input.files || !input.files[0]) return;
+
+  const file = input.files[0];
+
+  try {
+    if (status) status.textContent = 'Leser PDF...';
+
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    const pdf = await pdfjsLib.getDocument({ data: bytes }).promise;
+
+    const pages = [];
+
+    for (let pageNo = 1; pageNo <= pdf.numPages; pageNo++) {
+      const page = await pdf.getPage(pageNo);
+      const content = await page.getTextContent();
+
+      const items = content.items
+        .filter(item => item.str && item.str.trim())
+        .map(item => ({
+          text: item.str.trim(),
+          x: item.transform[4],
+          y: item.transform[5]
+        }));
+
+      items.sort((a, b) => {
+        if (Math.abs(a.y - b.y) > 3) return b.y - a.y;
+        return a.x - b.x;
+      });
+
+      let lines = [];
+      let current = [];
+      let lastY = null;
+
+      for (const item of items) {
+        if (lastY === null || Math.abs(item.y - lastY) <= 3) {
+          current.push(item);
+        } else {
+          current.sort((a, b) => a.x - b.x);
+          lines.push(current.map(v => v.text).join(' '));
+          current = [item];
+        }
+        lastY = item.y;
+      }
+
+      if (current.length) {
+        current.sort((a, b) => a.x - b.x);
+        lines.push(current.map(v => v.text).join(' '));
+      }
+
+      pages.push(lines.join('\n'));
+    }
+
+    pdfRawText = pages.join('\n\n');
+
+    if (rawBox) rawBox.value = pdfRawText;
+
+    const lines = pdfRawText
+      .split(/\n/)
+      .map(s => s.trim())
+      .filter(Boolean);
+
+    const numberValue = value => {
+      if (!value) return null;
+      const cleaned = String(value)
+        .replace(/\s/g, '')
+        .replace(',', '.')
+        .replace(/[^\d.-]/g, '');
+
+      const n = Number(cleaned);
+      return Number.isFinite(n) ? n : null;
+    };
+
+    const dateValue = value => {
+      if (!value) return '';
+
+      let m = value.match(/(\d{1,2})[.\-/](\d{1,2})[.\-/](\d{4})/);
+      if (m) {
+        return `${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`;
+      }
+
+      m = value.match(/(\d{4})-(\d{1,2})-(\d{1,2})/);
+      if (m) {
+        return `${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`;
+      }
+
+      return '';
+    };
+
+    const looksLikeHeader = text =>
+      /navn|utøver|dato|lut|liakov|sprint|bosco|knebøy|frivending|markløft|benkpress/i.test(text);
+
+    for (const line of lines) {
+      if (looksLikeHeader(line)) continue;
+
+      const parts = line.split(/\s{2,}|\t+/).filter(Boolean);
+
+      if (parts.length < 2) continue;
+
+      let dateIndex = parts.findIndex(p =>
+        /\d{1,2}[.\-/]\d{1,2}[.\-/]\d{4}|\d{4}-\d{1,2}-\d{1,2}/.test(p)
+      );
+
+      if (dateIndex < 0) continue;
+
+      const athlete = parts.slice(0, dateIndex).join(' ').trim();
+      const date = dateValue(parts[dateIndex]);
+
+      if (!athlete || !date) continue;
+
+      const values = parts.slice(dateIndex + 1).map(numberValue);
+
+      const row = {
+        id: makeId(),
+        athlete,
+        date,
+        birthdate: '',
+        gender: '',
+        group: '',
+        testTime: '',
+        location: '',
+        environment: '',
+        temperature: null,
+        weatherText: '',
+
+        longjump: values[0] ?? null,
+        liakov: values[1] ?? null,
+        sprint: values[2] ?? null,
+        bosco: values[3] ?? null,
+
+        squat: values[4] ?? null,
+        clean: values[5] ?? null,
+        deadlift: values[6] ?? null,
+        bench: values[7] ?? null
+      };
+
+      const hasResult = [
+        row.longjump,
+        row.liakov,
+        row.sprint,
+        row.bosco,
+        row.squat,
+        row.clean,
+        row.deadlift,
+        row.bench
+      ].some(v => v !== null && Number.isFinite(Number(v)));
+
+      if (hasResult) pdfRows.push(row);
+    }
+
+    if (preview) {
+      if (pdfRows.length) {
+        preview.innerHTML =
+          `<b>${pdfRows.length} resultat${pdfRows.length === 1 ? '' : 'er'} funnet.</b>` +
+          pdfRows.map(r =>
+            `<div style="margin-top:8px">
+              ${esc(r.athlete)} · ${esc(r.date)}
+              ${r.longjump != null ? ` · LUT ${fmt(r.longjump,2)} m` : ''}
+              ${r.liakov != null ? ` · Liakov ${fmt(r.liakov,2)} m` : ''}
+              ${r.sprint != null ? ` · 20 m ${fmt(r.sprint,2)} s` : ''}
+              ${r.bosco != null ? ` · Bosco ${fmt(r.bosco,1)} cm` : ''}
+              ${r.squat != null ? ` · Knebøy ${fmt(r.squat,1)} kg` : ''}
+              ${r.clean != null ? ` · Frivending ${fmt(r.clean,1)} kg` : ''}
+              ${r.deadlift != null ? ` · Markløft ${fmt(r.deadlift,1)} kg` : ''}
+              ${r.bench != null ? ` · Benkpress ${fmt(r.bench,1)} kg` : ''}
+            </div>`
+          ).join('');
+      } else {
+        preview.innerHTML =
+          '<b>PDF-en ble lest, men ingen sikre resultatrader ble gjenkjent.</b>' +
+          '<div style="margin-top:6px">Kontroller den uttrukne teksten nedenfor.</div>';
+      }
+    }
+
+    if (actions) {
+      actions.style.display = pdfRows.length ? '' : 'none';
+    }
+
+    if (status) {
+      status.textContent = pdfRows.length
+        ? `${pdfRows.length} resultat${pdfRows.length === 1 ? '' : 'er'} klare for import.`
+        : 'PDF lest, men ingen resultater ble gjenkjent automatisk.';
+    }
+
+  } catch (error) {
+    console.error('PDF-import:', error);
+
+    if (status) {
+      status.textContent = 'Kunne ikke lese PDF: ' + (error.message || error);
+    }
+
+    if (actions) actions.style.display = 'none';
+  }
+}
+
+
+async function importPdfRows() {
+  if (!pdfRows || !pdfRows.length) {
+    alert('Ingen PDF-resultater er klare for import.');
+    return;
+  }
+
+  try {
+    for (const row of pdfRows) {
+      data.push(row);
+
+      if (typeof window.cloudAddResult === 'function') {
+        await window.cloudAddResult(row);
+      }
+    }
+
+    persist();
+    render();
+
+    if (typeof updateAge === 'function') updateAge();
+
+    const count = pdfRows.length;
+
+    pdfRows = [];
+
+    const actions = document.getElementById('pdfActions');
+    const status = document.getElementById('pdfStatus');
+
+    if (actions) actions.style.display = 'none';
+    if (status) {
+      status.textContent =
+        `${count} resultat${count === 1 ? '' : 'er'} importert.`;
+    }
+
+    alert(`${count} resultat${count === 1 ? '' : 'er'} importert.`);
+
+  } catch (error) {
+    console.error('PDF-lagring:', error);
+    alert('Kunne ikke importere resultatene: ' + (error.message || error));
+  }
+}
+</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js"></script>
 <script src="cloud.js?v=47"></script>
