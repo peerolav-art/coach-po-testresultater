@@ -772,6 +772,22 @@ async function saveEdit(){
 }
 function openProfileById(id){const r=findById(id);if(r)openProfile(r.athlete)}
 function closeProfile(){document.getElementById('athleteProfile').classList.remove('open')}
+  function startNewTestFromProfile(athleteName){
+  const select=document.getElementById('athleteSelect');
+  if(!select) return;
+
+  const option=[...select.options].find(o =>
+    (o.dataset.name||'').trim() === String(athleteName||'').trim()
+  );
+
+  if(option){
+    select.value=option.value;
+    selectAthleteFromRegister();
+  }
+
+  closeProfile();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
   async function deleteAthleteFromProfile(){
   if(window.COACH_PO_ROLE !== 'coach'){
     alert('Bare coach kan slette en utøver.');
